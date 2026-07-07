@@ -1,0 +1,16 @@
+model User {
+  id                 String             @id @default(uuid())
+  name               String
+  email              String             @unique
+  phoneNumber        String
+  profilePhoto       String?
+  role               Role               @default(CUSTOMER)
+  status             userStatus         @default(ACTIVE)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  technicianProfiles TechnicianProfile?
+  bookings           Booking[]          @relation("CustomerBookings")
+  reviews            Review[]           @relation("CustomerReviews")
+
+  @@map("users")
+}
