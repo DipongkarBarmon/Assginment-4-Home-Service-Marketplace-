@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { authCntroller } from "./auth.controller.js";
+import { authController } from "./auth.controller.js";
 
 const router = Router()
 
 
-router.post('/register',authCntroller.userRegister)
-router.post('/login',authCntroller.userLogin)
+router.post('/register',authController.userRegister)
+router.post('/login',authController.userLogin)
+router.post('/refresh-token',authController.refreshToken)
 
 export const authRouter = router

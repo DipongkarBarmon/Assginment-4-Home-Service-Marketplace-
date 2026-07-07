@@ -1,4 +1,4 @@
-import { SignOptions } from "jsonwebtoken"
+import { JwtPayload, SignOptions } from "jsonwebtoken"
 import config from "../../config/index.js"
 import { prisma } from "../../lib/prisma.js"
 import { jwtToken } from "../../utility/jwtToken.js"
@@ -58,7 +58,7 @@ const userRegisterIntoDB = async(payload : IUser) => {
 const userLoginFromBD = async(payload : ILoginUser) => {
 
    const {email, password} = payload
-   
+
     const user = await prisma.user.findUniqueOrThrow({
       where : {
          email
@@ -93,7 +93,39 @@ const userLoginFromBD = async(payload : ILoginUser) => {
 
 }
 
+
+const refreshTokenFromDB = async(token : string) => {
+     
+   const varifiedToken = jwtToken.jwtTokenVarify(token,config.jwt_refresh_token)
+   
+   if(!varifiedToken.success) {
+       throw new Error(varifiedToken.error)
+   }
+   const {id} = varifiedToken.data as JwtPayload
+ 
+   const user = await prisma.user.findUniqueOrThrow({
+      where : {
+         id
+      }
+   })
+
+     const jwtPayload = {
+       id : user.id,
+       email : user.email,
+       name : user.name,
+       role : user.role
+    }
+
+    const accessToken = jwtToken.jwtTokenCreate(jwtPayload , config.jwt_accress_token ,config.jwt_access_expires_in as SignOptions)
+
+
+    return {accessToken}
+
+
+}
+
 export const authService = {
   userRegisterIntoDB,
-  userLoginFromBD
+  userLoginFromBD,
+  refreshTokenFromDB
 }
