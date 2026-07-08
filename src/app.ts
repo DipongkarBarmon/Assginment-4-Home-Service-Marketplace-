@@ -7,6 +7,8 @@ import cookieParser from 'cookie-parser'
 import { globalErrorhandler } from './Middleware/globalErrorHandler.js'
 import { notFound } from './Middleware/notFound.js'
 import { technicianRouter } from './Modules/technician/technician.route.js'
+import { serviceRouter } from './Modules/service/service.route.js'
+import { categoryRouter } from './Modules/categroy/category.route.js'
 const app = express()
 
 app.use(express.json())
@@ -25,6 +27,8 @@ app.get('/',async(req : Request, res : Response) => {
 
 app.use('/api/auth',authRouter)
 app.use('/api/technician',technicianRouter)
+app.use('/api/category',categoryRouter)
+app.use('/api/service',serviceRouter)
 
 
 app.use(globalErrorhandler)

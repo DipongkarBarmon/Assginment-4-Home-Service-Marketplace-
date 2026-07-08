@@ -13,7 +13,7 @@ interface TResponse<T> {
     success : boolean,
     statusCode : number,
     message : String,
-    data? : T,
+    data : T,
     meta? :TMeta
 
 }

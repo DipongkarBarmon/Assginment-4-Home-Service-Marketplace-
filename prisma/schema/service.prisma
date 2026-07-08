@@ -2,7 +2,7 @@ model Service {
   id String @id @default(uuid())
 
   title           String
-  description     String
+  description     String?
   price           Decimal           @db.Decimal(10, 2)
   duration        Int? // Duration in minutes
   certificates    String[] // Array of certificate URLs or names
