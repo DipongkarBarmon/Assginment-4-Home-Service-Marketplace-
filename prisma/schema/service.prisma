@@ -1,16 +1,16 @@
 model Service {
   id String @id @default(uuid())
 
-  title       String
-  description String
-  price       Decimal @db.Decimal(10, 2)
-  duration    Int // Duration in minutes
-
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-
-  technicianId String
-  technician   TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  title           String
+  description     String
+  price           Decimal           @db.Decimal(10, 2)
+  duration        Int? // Duration in minutes
+  certificates    String[] // Array of certificate URLs or names
+  categoryId      String
+  category        Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  experienceYears Int               @default(0)
+  technicianId    String
+  technician      TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
 
   isActive Boolean @default(true)
 

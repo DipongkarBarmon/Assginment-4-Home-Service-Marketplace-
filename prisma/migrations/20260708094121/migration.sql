@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "services" ALTER COLUMN "duration" DROP NOT NULL;

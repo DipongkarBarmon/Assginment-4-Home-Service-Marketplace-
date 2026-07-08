@@ -6,6 +6,7 @@ import config from './config/index.js'
 import cookieParser from 'cookie-parser'
 import { globalErrorhandler } from './Middleware/globalErrorHandler.js'
 import { notFound } from './Middleware/notFound.js'
+import { technicianRouter } from './Modules/technician/technician.route.js'
 const app = express()
 
 app.use(express.json())
@@ -23,6 +24,7 @@ app.get('/',async(req : Request, res : Response) => {
 
 
 app.use('/api/auth',authRouter)
+app.use('/api/technician',technicianRouter)
 
 
 app.use(globalErrorhandler)

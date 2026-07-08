@@ -6,7 +6,7 @@ import { ILoginUser, IUser, updateUserProfile } from "./auth.interface.js"
 import bcrypt from 'bcrypt'
 
 const userRegisterIntoDB = async(payload : IUser) => {
-    const {name, email, password,phoneNumber, profilePhoto,role , status} = payload
+    const {name, email, password,phoneNumber, profilePhoto,role, status} = payload
     const isUserExist = await prisma.user.findUnique({
         where :{
           email
@@ -30,7 +30,7 @@ const userRegisterIntoDB = async(payload : IUser) => {
              password : hashPassword,
              phoneNumber,
              profilePhoto ,
-             role ,
+             role,
              status 
           }
        })
