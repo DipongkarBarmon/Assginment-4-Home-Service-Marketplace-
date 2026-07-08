@@ -9,11 +9,8 @@ model Booking {
 
   serviceId String
   service   Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-
-  bookingDate DateTime
-
-  startTime DateTime
-  endTime   DateTime
+  availabilityId String @unique
+  availability   Availability @relation(fields: [availabilityId], references: [id], onDelete  : Restrict) 
 
   price Decimal @db.Decimal(10, 2)
 
@@ -27,6 +24,6 @@ model Booking {
   @@index([customerId])
   @@index([technicianId])
   @@index([serviceId])
-  @@index([bookingDate])
+  @@index([availabilityId])
   @@map("bookings")
 }

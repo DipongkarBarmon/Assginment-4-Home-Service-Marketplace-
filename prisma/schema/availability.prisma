@@ -10,10 +10,12 @@ model Availability {
   endTime   DateTime // e.g. 2026-07-15 12:00
 
   isBooked Boolean @default(false)
+  bookings Booking?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([technicianId, date])
   @@map("availabilities")
+  
 }
