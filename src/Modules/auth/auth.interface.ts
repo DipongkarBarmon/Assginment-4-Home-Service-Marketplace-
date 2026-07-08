@@ -17,3 +17,12 @@ export interface ILoginUser  {
    password : string
 
 }
+
+export interface updateUserProfile {
+   name? : string,
+   email? : string,
+   phoneNumber? : string,
+   profilePhoto? : string,
+   role? : Role,
+   status? : userStatus 
+}

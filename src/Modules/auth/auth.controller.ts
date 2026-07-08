@@ -3,6 +3,7 @@ import { catchAsync } from "../../utility/catchAsync.js";
 import { authService } from "./auth.service.js";
 import sendRespons from "../../utility/sendResponse.js";
 import httpsStatus from 'http-status'
+import { channel } from "node:diagnostics_channel";
 
 const userRegister = catchAsync(async(req : Request, res : Response, next : NextFunction) => {
      const result = await authService.userRegisterIntoDB(req.body)
@@ -68,8 +69,47 @@ const refreshToken = catchAsync(async( req : Request,res: Response,next : NextFu
 })
 
 
+const getUserProfile = catchAsync(async(req : Request, res : Response, next : NextFunction) => {
+    
+    console.log("hello")
+    const userProfile = await authService.getUserProfileFromDB(req.user.id)
+    
+
+    sendRespons(res, {
+       success : true,
+       statusCode : httpsStatus.OK,
+       message : "User profile fetched successfully",
+       data : userProfile
+    })
+})
+
+const updateUserProfile = catchAsync(async(req : Request, res : Response, next : NextFunction) => {
+    const user = req.user;
+    const updatedProfile = await authService.updateUserProfileInDB(user.id, req.body)
+    sendRespons(res, {
+       success : true,
+       statusCode : httpsStatus.OK,
+       message : "User profile updated successfully",
+       data : updatedProfile
+    })
+})
+
+const deleteUserProfile = catchAsync(async(req : Request, res : Response, next : NextFunction) => {
+    const user = req.user;
+    const deletedProfile = await authService.deleteUserProfileInDB(user.id)
+    sendRespons(res, {
+       success : true,
+       statusCode : httpsStatus.OK,
+       message : "User profile deleted successfully",
+       data : deletedProfile
+    })
+})
+
 export const authController = {
    userRegister,
    userLogin,
-   refreshToken
+   refreshToken,
+   getUserProfile,
+   updateUserProfile,
+   deleteUserProfile
 }

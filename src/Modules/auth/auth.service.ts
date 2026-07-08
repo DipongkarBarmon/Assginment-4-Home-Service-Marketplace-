@@ -2,7 +2,7 @@ import { JwtPayload, SignOptions } from "jsonwebtoken"
 import config from "../../config/index.js"
 import { prisma } from "../../lib/prisma.js"
 import { jwtToken } from "../../utility/jwtToken.js"
-import { ILoginUser, IUser } from "./auth.interface.js"
+import { ILoginUser, IUser, updateUserProfile } from "./auth.interface.js"
 import bcrypt from 'bcrypt'
 
 const userRegisterIntoDB = async(payload : IUser) => {
@@ -124,8 +124,68 @@ const refreshTokenFromDB = async(token : string) => {
 
 }
 
+const getUserProfileFromDB = async(id : string) => {
+   const user = await prisma.user.findUniqueOrThrow({
+      where : {
+         id
+      },
+      omit :{
+          password : true
+      },
+      include : {
+         technicianProfiles: true,
+         bookings: true,
+         reviews : true
+      }
+    })
+
+    return user
+
+}
+
+const updateUserProfileInDB = async(id : string, payload : updateUserProfile) => { 
+     const transactionResult = await prisma.$transaction(async(tx) => { 
+         const user = await tx.user.update({
+            where : {
+               id
+            },
+            data : payload,
+            omit : {
+               password : true
+            },
+            include : {
+               technicianProfiles: true,
+               bookings: true,
+               reviews : true
+            }
+         })
+         return user  
+
+     })
+     return transactionResult
+}
+const deleteUserProfileInDB = async(id : string) => {
+
+       await prisma.user.delete({
+         where : {
+            id
+         },
+         omit : {
+            password : true
+         },
+         include : {
+            technicianProfiles: true,
+            bookings: true,
+            reviews : true
+         }
+      })
+      return null   
+}
 export const authService = {
   userRegisterIntoDB,
   userLoginFromBD,
-  refreshTokenFromDB
+  refreshTokenFromDB,
+  getUserProfileFromDB,
+  updateUserProfileInDB,
+  deleteUserProfileInDB
 }
