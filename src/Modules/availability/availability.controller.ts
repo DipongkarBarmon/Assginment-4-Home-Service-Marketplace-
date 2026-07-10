@@ -19,7 +19,8 @@ const createAvailability = catchAsync(async( req : Request, res : Response, next
 
 
 const getAllAvailability = catchAsync(async( req : Request, res : Response, next : NextFunction) => {
-      const result = await availabilityService.getAllAvailabilityFromDB()
+    const query = req.query 
+      const result = await availabilityService.getAllAvailabilityFromDB(query)
       sendRespons(res, {
           success : true,
           statusCode : httpsStatus.OK,
@@ -39,33 +40,12 @@ const deleteAvailabilityById = catchAsync(async( req : Request, res : Response, 
       })
 })  
 
-const getBookedAvailabilityByTechnicianId = catchAsync(async( req : Request, res : Response, next : NextFunction) => {
-      const {technicianId} = req.body
-      const result = await availabilityService.getBookedAvailabilityByTechnicianIdFromDB(technicianId as string)
-      sendRespons(res, {
-          success : true,
-          statusCode : httpsStatus.OK,
-          message : "Booked availability retrieved successfully!",
-          data : result
-      })
-})
-
-const getFreeAvailabilityByTechnicianId = catchAsync(async( req : Request, res : Response, next : NextFunction) => {
-      const {technicianId} = req.body
-      const result = await availabilityService.getFreeAvailabilityByTechnicianIdFromDB(technicianId as string)
-      sendRespons(res, {
-          success : true,
-          statusCode : httpsStatus.OK,
-          message : "Free availability retrieved successfully!",
-          data : result
-      })
-})
+ 
 
  
 export const availabilityController = {
     createAvailability,
     getAllAvailability,
     deleteAvailabilityById,
-    getBookedAvailabilityByTechnicianId,
-    getFreeAvailabilityByTechnicianId
+   
 }

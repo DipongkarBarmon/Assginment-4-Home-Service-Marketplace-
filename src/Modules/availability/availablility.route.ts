@@ -6,8 +6,6 @@ const router = Router()
 
 router.post('/create-availability',auth(Role.TECHNICIAN),availabilityController.createAvailability)
 router.get('/get-all-availability',availabilityController.getAllAvailability),
-router.get('/get-booked-availability',availabilityController.getBookedAvailabilityByTechnicianId)
-router.get('/get-free-availability',availabilityController.getFreeAvailabilityByTechnicianId)
 router.delete('/delete-availability/:availabilityId',auth(Role.TECHNICIAN),availabilityController.deleteAvailabilityById)
 
 

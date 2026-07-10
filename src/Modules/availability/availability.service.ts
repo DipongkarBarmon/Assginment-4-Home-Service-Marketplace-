@@ -1,5 +1,6 @@
+import { AvailabilityWhereInput } from "../../../generated/prisma/models.js";
 import { prisma } from "../../lib/prisma.js";
-import { IAvailability } from "./availability.interface.js";
+import { IAvailability, IAvailabilityQuery } from "./availability.interface.js";
 
 const createAvailabilityIntoDB = async (userId: string, availabilityData: IAvailability) => {
   
@@ -69,10 +70,52 @@ const createAvailabilityIntoDB = async (userId: string, availabilityData: IAvail
 };
 
 
-const getAllAvailabilityFromDB = async () => {
- 
-    const availabilities = await prisma.availability.findMany({
+const getAllAvailabilityFromDB = async (query : IAvailabilityQuery) => {
+
+     const limit = query.limit?Number(query.limit) : 10;
+     const page = query.page?Number(query.page): 1;
+     const skip = (page -1)*limit;
+     const sortBy = query.sortBy? query.sortBy : "createdAt";
+     const sortOrder = query.sortOrder? query.sortOrder : "desc";
      
+     const andCondition : AvailabilityWhereInput[] = []
+     
+        if(query.isBooked) {
+            andCondition.push({
+                isBooked : query.isBooked? true : false
+            })
+        } 
+        if(query.technicianId) {
+            andCondition.push({
+                technicianId : query.technicianId
+            })
+        }
+        if(query.date) {
+            andCondition.push({
+                date : query.date
+            })
+        }
+        if(query.startTime) {
+            andCondition.push({
+                startTime : query.startTime 
+            })
+        }
+        if(query.endTime) {
+            andCondition.push({
+                endTime : query.endTime
+              
+            })
+        }
+
+    const whereCondition : AvailabilityWhereInput = andCondition.length > 0 ? { AND : andCondition } : {}
+     
+    const availabilities = await prisma.availability.findMany({
+        where : whereCondition,
+        skip,
+        take : limit,
+        orderBy : {
+            [sortBy] : sortOrder
+        },
         include : {
             technician : {
                 include : {
@@ -112,97 +155,12 @@ const deleteAvailabilityByIdFromDB = async (availabilityId: string) => {
     return null
 };
 
-const getBookedAvailabilityByTechnicianIdFromDB = async (technicianId: string) => {
-     await prisma.technicianProfile.findUniqueOrThrow({
-        where : {
-            id : technicianId
-        }
-     })
-
-      const bookedAvailabilities = await prisma.availability.findMany({ 
-          where : {
-              technicianId,
-              isBooked : true
-          },
-          include : {
-            technician : {
-                include : {
-                    user : {
-                        omit : {
-                            password : true
-                        }
-                    },
-                    services : {
-                       include : {
-                          category : true
-                       }  
-                    },
-                    reviews : true,
-                    bookings : true
-                } 
-            }
-          },
-          orderBy : [
-             {
-               date : "asc"
-             },
-             {
-               startTime : "asc"
-             }
-          ]  
-        
-      })
-      return bookedAvailabilities;
-}
-
-const getFreeAvailabilityByTechnicianIdFromDB = async (technicianId: string) => {
-    await prisma.technicianProfile.findUniqueOrThrow({
-       where : {
-           id : technicianId
-       }
-    })
-
-     const freeAvailabilities = await prisma.availability.findMany({
-         where : {
-             technicianId,
-             isBooked : false
-         },
-         include : {
-           technician : {
-               include : {
-                   user : {
-                       omit : {
-                           password : true
-                       }
-                   },
-                   services : {
-                      include : {
-                         category : true
-                      }  
-                    },
-                    reviews : true,
-                    bookings : true
-               } 
-           }
-         },
-         orderBy : [
-            {
-              date : "asc"
-            },
-            {
-              startTime : "asc"
-            } 
-         ]
-     })
-     return freeAvailabilities;
- }  
-
+ 
 export const availabilityService = {
     createAvailabilityIntoDB,
     getAllAvailabilityFromDB,
     deleteAvailabilityByIdFromDB,
-    getBookedAvailabilityByTechnicianIdFromDB,
-    getFreeAvailabilityByTechnicianIdFromDB
+    
 };
  
  

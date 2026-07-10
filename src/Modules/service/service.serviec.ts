@@ -84,7 +84,12 @@ const getAllServiceFromDB = async(query: IServiceQuery) => {
             description : query.description
         })
      }
-
+     if(query.isActive) {
+        andCondition.push({
+            isActive : query.isActive? true : false
+        })
+     }
+      
      if(query.certificates) {
         andCondition.push({
             certificates : {
