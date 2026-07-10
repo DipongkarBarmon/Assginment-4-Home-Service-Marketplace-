@@ -56,10 +56,24 @@ const deleteTechnicianProfile = catchAsync(async(req : Request, res : Response, 
      })
 })  
 
+const getOwnTechnicianProfile = catchAsync(async(req : Request, res : Response, next : NextFunction) => { 
+        const userId = req.user.userId;
+        const technicianProfile = await technicianService.getOwnTechnicianProfileFromDB(userId);
+        sendRespons(res, {
+            success : true,
+            statusCode :httpsStatus.OK,
+            message : "Technician profile retrieved successfully!",
+            data : technicianProfile
+        })     
+})
+
 export const technicianController = {
     createTechnicianProfile,
     getTechnicianProfile,
     updateTechnicianProfile,
-    deleteTechnicianProfile
+    deleteTechnicianProfile,
+    getOwnTechnicianProfile
 }
+
+ 
  

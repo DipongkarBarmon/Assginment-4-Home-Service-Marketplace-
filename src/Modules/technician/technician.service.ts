@@ -89,9 +89,29 @@ const deleteTechnicianProfileFromDB = async (technicianId : string) => {
     return null
 }
 
+const getOwnTechnicianProfileFromDB = async (userId : string) => {
+    
+    const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
+        where : {
+            userId : userId
+        },
+        include : {
+            user : {
+                omit : {
+                    password : true
+                }
+            },
+            services : true,
+            reviews : true
+        }
+    })
+    return technicianProfile
+}   
+
 export const technicianService = {
     cteateTechnicianProfileIntoDB,
     updateTechnicianProfileIntoDB,
     getTechnicianProfileFromDB,
-    deleteTechnicianProfileFromDB
+    deleteTechnicianProfileFromDB,
+    getOwnTechnicianProfileFromDB
 } 

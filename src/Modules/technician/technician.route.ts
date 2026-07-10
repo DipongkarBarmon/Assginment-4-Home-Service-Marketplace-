@@ -8,7 +8,7 @@ const router = Router()
 router.post('/create-technician-profile',auth(Role.TECHNICIAN),technicianController.createTechnicianProfile)
 
 router.get('/get-technician-profile/:technicianId',technicianController.getTechnicianProfile)
-
+router.get('/get-technician-profile/me',auth(Role.TECHNICIAN),technicianController.getOwnTechnicianProfile)
 router.put('/update-technician-profile/:technicianId',auth(Role.TECHNICIAN),technicianController.updateTechnicianProfile)
 
 router.delete('/delete-technician-profile/:technicianId',auth(Role.TECHNICIAN),technicianController.deleteTechnicianProfile)  
