@@ -5,13 +5,13 @@ import { auth } from "../../Middleware/auth.js";
 
 const router = Router()
 
-router.post('/create-technician-profile',auth(Role.TECHNITIAN),technicianController.createTechnicianProfile)
+router.post('/create-technician-profile',auth(Role.TECHNICIAN),technicianController.createTechnicianProfile)
 
 router.get('/get-technician-profile/:technicianId',technicianController.getTechnicianProfile)
 
-router.put('/update-technician-profile/:technicianId',auth(Role.TECHNITIAN),technicianController.updateTechnicianProfile)
+router.put('/update-technician-profile/:technicianId',auth(Role.TECHNICIAN),technicianController.updateTechnicianProfile)
 
-router.delete('/delete-technician-profile/:technicianId',auth(Role.TECHNITIAN),technicianController.deleteTechnicianProfile)  
+router.delete('/delete-technician-profile/:technicianId',auth(Role.TECHNICIAN),technicianController.deleteTechnicianProfile)  
 
 
 export const technicianRouter = router

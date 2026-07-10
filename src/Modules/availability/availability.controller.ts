@@ -17,6 +17,7 @@ const createAvailability = catchAsync(async( req : Request, res : Response, next
 })
 
 
+
 const getAllAvailability = catchAsync(async( req : Request, res : Response, next : NextFunction) => {
       const result = await availabilityService.getAllAvailabilityFromDB()
       sendRespons(res, {
