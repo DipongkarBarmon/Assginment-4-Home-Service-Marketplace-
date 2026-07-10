@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma.js"
-import { ITechnicianProfile, IUpdateTechnicianProfile } from "./technician.interface.js"
+import { ICreateService, ITechnicianProfile, IUpdateService, IUpdateTechnicianProfile } from "./technician.interface.js"
 
 const cteateTechnicianProfileIntoDB = async (userId : string, technicianData : ITechnicianProfile) => { 
    const user = await prisma.user.findUniqueOrThrow({
@@ -90,7 +90,7 @@ const deleteTechnicianProfileFromDB = async (technicianId : string) => {
 }
 
 const getOwnTechnicianProfileFromDB = async (userId : string) => {
-    
+
     const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
         where : {
             userId : userId
@@ -108,10 +108,128 @@ const getOwnTechnicianProfileFromDB = async (userId : string) => {
     return technicianProfile
 }   
 
+
+const createServiceIntoDB = async (userId : string, serviceData : ICreateService) => {
+      const user = await prisma.user.findUniqueOrThrow({
+        where : {
+            id : userId
+        },include : {
+            technicianProfiles : {
+               include : {
+                  services : true
+            
+               }
+            }
+        }
+      })
+
+      if(!user.technicianProfiles) {
+        throw new Error("Technician profile does not exist for this user!")     
+      }
+
+     const exists = user.technicianProfiles.services.some(
+        (service) => service.categoryId === serviceData.categoryId
+      );
+
+      if (exists) {
+        throw new Error("A service with this category already exists.");
+      }
+      
+      const technicianProfile = user.technicianProfiles;
+    
+
+      const createdService = await prisma.service.create({
+        data : {
+             technicianId : technicianProfile.id,
+            ...serviceData
+        },
+        include : { 
+          technician : {
+            include : {
+                user : {  
+                  omit : {
+                    password : true
+                  }
+                }
+            }
+          },  
+           category : true  
+        }
+      })
+
+      return createdService;  
+}
+
+
+const updateServiceByIdFromDB = async(id : string, updateData : IUpdateService) => {
+    await prisma.service.findUniqueOrThrow({
+        where : {
+            id
+        }
+    })
+
+    const result = await prisma.service.update({
+        where : {
+            id
+        },
+        data : updateData,
+        include : {
+            category : true,
+            technician : {
+                include : {
+                    user : {
+                        omit : {
+                            password : true
+                        }
+                    },
+                    reviews : true
+
+                },
+                
+            },
+            bookings : true
+        }
+    })
+    return result;
+}
+
+const deleteServiceByIdFromDB = async(id : string) => {
+    await prisma.service.findUniqueOrThrow({
+        where : {
+            id
+        }
+    })
+
+    const result = await prisma.service.delete({
+       where : {
+         id
+       },
+       include : {
+          category :true,   
+          technician : {
+            include : {
+                user : {
+                    omit : {
+                        password : true
+                    }
+                },
+                reviews : true
+            },
+             
+          },
+          bookings : true
+       }
+    })
+    return result;
+}
+
 export const technicianService = {
     cteateTechnicianProfileIntoDB,
     updateTechnicianProfileIntoDB,
     getTechnicianProfileFromDB,
     deleteTechnicianProfileFromDB,
-    getOwnTechnicianProfileFromDB
+    getOwnTechnicianProfileFromDB,
+    createServiceIntoDB,
+    updateServiceByIdFromDB,
+    deleteServiceByIdFromDB
 } 
