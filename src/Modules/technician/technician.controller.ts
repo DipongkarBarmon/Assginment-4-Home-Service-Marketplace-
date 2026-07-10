@@ -4,6 +4,7 @@ import { technicianService } from "./technician.service.js";
 import { send } from "node:process";
 import sendRespons from "../../utility/sendResponse.js";
 import httpsStatus from "http-status"
+import { ITechnicianProfileQuery } from "./technician.interface.js";
 
 const createTechnicianProfile = catchAsync(async(req : Request, res : Response, next : NextFunction) => { 
      const userId = req.user?.id;
@@ -25,6 +26,17 @@ const getTechnicianProfile = catchAsync(async(req : Request, res : Response, nex
          statusCode :httpsStatus.OK,
          message : "Technician profile retrieved successfully!",
          data : technicianProfile
+     })     
+})
+
+const getAllTechnicianProfile = catchAsync(async(req : Request, res : Response, next : NextFunction) => {
+     const query = req.query  
+     const technicianProfiles = await technicianService.getAllTechnicianProfileFromDB(query);
+       sendRespons(res, {
+         success : true,
+         statusCode :httpsStatus.OK,
+         message : "All technician profiles retrieved successfully!",
+         data : technicianProfiles
      })     
 })
 
@@ -111,6 +123,7 @@ export const technicianController = {
     updateTechnicianProfile,
     deleteTechnicianProfile,
     getOwnTechnicianProfile,
+    getAllTechnicianProfile,
     createService,
     updateServiceById,
     deleteServiceById

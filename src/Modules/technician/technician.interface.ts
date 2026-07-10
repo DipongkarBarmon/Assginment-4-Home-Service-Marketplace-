@@ -1,3 +1,5 @@
+import e from "express"
+import { TechnicianProfileWhereInput } from "../../../generated/prisma/models.js"
 
 export interface ITechnicianProfile {
     bio? : string,
@@ -16,6 +18,15 @@ export interface IUpdateTechnicianProfile {
     completedJobs? : number,
     isVerified? : boolean 
 } 
+
+
+export interface ITechnicianProfileQuery extends TechnicianProfileWhereInput {
+    searchTerm? : string,
+    page ? : string,
+    limit? : string,
+    sortOrder? : string,
+    sortBy? : string
+}
 
 
 

@@ -7,7 +7,8 @@ import httpsStatus from "http-status"
 
 
 const getAllService = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-      const result = await serviceService.getAllServiceFromDB();
+    const query = req.query
+      const result = await serviceService.getAllServiceFromDB( query);
       sendRespons(res, { 
           success : true,
           statusCode : httpsStatus.OK,

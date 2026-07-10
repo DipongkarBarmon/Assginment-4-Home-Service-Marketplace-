@@ -1,5 +1,7 @@
+import { TechnicianProfile } from "../../../generated/prisma/browser.js"
+import { TechnicianProfileWhereInput } from "../../../generated/prisma/models.js"
 import { prisma } from "../../lib/prisma.js"
-import { ICreateService, ITechnicianProfile, IUpdateService, IUpdateTechnicianProfile } from "./technician.interface.js"
+import { ICreateService, ITechnicianProfile, ITechnicianProfileQuery, IUpdateService, IUpdateTechnicianProfile } from "./technician.interface.js"
 
 const cteateTechnicianProfileIntoDB = async (userId : string, technicianData : ITechnicianProfile) => { 
    const user = await prisma.user.findUniqueOrThrow({
@@ -108,6 +110,117 @@ const getOwnTechnicianProfileFromDB = async (userId : string) => {
     return technicianProfile
 }   
 
+
+const getAllTechnicianProfileFromDB = async (query : ITechnicianProfileQuery) => {
+
+     const limit = query.limit?Number(query.limit) : 10;
+     const page = query.page?Number(query.page): 1;
+     const skip = (page -1)*limit;
+     const sortBy = query.sortBy? query.sortBy : "createdAt";
+     const sortOrder = query.sortOrder? query.sortOrder : "desc";
+
+     const andCondition : TechnicianProfileWhereInput[] = []
+     const  skills = query.skills ? JSON.parse(query.skills as string) : null;
+     const skillsArray = Array.isArray(skills) ? skills : []
+
+        if(query.searchTerm) {
+            andCondition.push({
+                OR : [
+                    {
+                        bio : {
+                            contains : query.searchTerm,
+                            mode : "insensitive"
+                        }
+                    },
+                    {
+                        address : {
+                            contains : query.searchTerm,
+                            mode : "insensitive"
+                        }
+                    },
+                    {
+                        skills : {
+                            hasSome : skillsArray
+                        }
+                    }
+                ]
+            })
+        }
+
+        if(query.isVerified) {
+            andCondition.push({
+                isVerified : query.isVerified? true : false
+            })
+        }
+        if(query.averageRating) {
+            andCondition.push({
+                averageRating : {
+                    gte : Number(query.averageRating)
+                }
+            })
+        }
+
+        if(query.completedJobs) {
+            andCondition.push({
+                completedJobs : {
+                    gte : Number(query.completedJobs)
+                }
+            })
+        }
+       
+        if(query.userId) {
+            andCondition.push({
+                userId : query.userId
+            })
+        }
+
+        if(query.bio) {
+            andCondition.push({
+                bio : query.bio
+            })
+        }
+                    
+        if(query.address) {
+            andCondition.push({
+                address : query.address
+            })
+        }
+
+        if(query.skills) {
+            andCondition.push({
+                skills : {
+                    hasSome : skillsArray
+                }
+            })
+        }
+
+     const whereCondition : TechnicianProfileWhereInput = andCondition.length > 0 ? { AND : andCondition } : {}
+      
+        const technicianProfiles = await prisma.technicianProfile.findMany({
+            where : whereCondition,
+
+            take : limit,
+            skip : skip,
+            orderBy : {
+                [sortBy] : sortOrder
+            },
+            include : {
+                user : {
+                    omit : {
+                        password : true
+                    }
+                },
+                services : {
+                     include : {
+                        category : true
+                        } 
+                },
+                reviews : true
+            }
+        })
+        return technicianProfiles;
+
+}
 
 const createServiceIntoDB = async (userId : string, serviceData : ICreateService) => {
       const user = await prisma.user.findUniqueOrThrow({
@@ -229,6 +342,7 @@ export const technicianService = {
     getTechnicianProfileFromDB,
     deleteTechnicianProfileFromDB,
     getOwnTechnicianProfileFromDB,
+    getAllTechnicianProfileFromDB,
     createServiceIntoDB,
     updateServiceByIdFromDB,
     deleteServiceByIdFromDB
