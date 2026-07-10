@@ -7,3 +7,17 @@ export interface IUserQuery extends UserWhereInput {
     sortOrder? : string,
     sortBy? : string
 }
+
+
+export interface ICreateCategory {
+    name : string,
+    icon? : string,
+    description? : string,
+}
+
+
+export interface IUpdateCategory { 
+    name? : string,
+    icon? : string,
+    description? : string,
+}

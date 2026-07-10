@@ -1,87 +1,109 @@
+import { CategoryWhereInput } from "../../../generated/prisma/models.js";
 import { prisma } from "../../lib/prisma.js";
-import { ICreateCategory, IUpdateCategory } from "./category.interface.js"
-
-const createCategoryIntoDB = async (categoryData : ICreateCategory) => {
-      const { name, icon, description } = categoryData;
-       
-      const createdCategory = await prisma.category.create({
-        data: {
-          name,
-          icon,
-          description,
-        },
-        include: {
-          services: true,
-         },  
-      });
-
-      return createdCategory;
-}
-
+import { categoryQuery } from "./category.interface.js";
  
-const getAllCategroyFromDB = async() => {
+
+const getAllCategroyFromDB = async(query: categoryQuery) => {
+
+     const limit = query.limit?Number(query.limit) : 10;
+     const page = query.page?Number(query.page): 1;
+     const skip = (page -1)*limit;
+     const sortBy = query.sortBy? query.sortBy : "createdAt";
+     const sortOrder = query.sortOrder? query.sortOrder : "desc";
+
+     const andCondition : CategoryWhereInput[] = []
+
+        if(query.searchTerm) {
+            andCondition.push({
+                OR : [
+                    {
+                        name : {
+                            contains : query.searchTerm,
+                            mode : "insensitive"
+                        }
+                    },
+                    {
+                        description : {
+                            contains : query.searchTerm,
+                            mode : "insensitive"
+                        }
+                    }
+                ]
+            })
+        }
+        
+        if(query.name) {
+            andCondition.push({
+                name : query.name
+            })
+        }
+        if(query.description) {
+            andCondition.push({
+                description : query.description
+            })
+        }
+
+    const whereCondition : CategoryWhereInput = andCondition.length > 0 ? { AND : andCondition} : {}   
+    
+    
     const result = await prisma.category.findMany({
-       include : {
-          services : true
-       }
+        where : whereCondition,
+        skip,
+        take : limit,
+        orderBy : {
+            [sortBy] : sortOrder
+        },
+        include : {
+            services : {
+                include : { 
+                     technician  : {
+                        include : {
+                            user : {
+                                omit : {
+                                    password : true
+                                }
+                            },  
+                            reviews : true
+                        }
+                     }
+                }
+            }
+        }   
     })
-    return result;
+
+    return result   
 }
+
 
 const getCategoryByIdfromDB = async(id : string) => {
+
    const result = await prisma.category.findUniqueOrThrow({
      where : {
        id
      },
      include : {
-       services : true
+       services : {
+            include : {
+                technician  : {
+                    include : {
+                        user : {
+                            omit : {
+                                password : true
+                            }
+                        },  
+                        reviews : true
+                    }
+                }
+            }       
+       }
      }
    })
    return result
 }
 
-
-
-const updateCategoryByIdFromDB = async(id : string, updateData : IUpdateCategory) => {
-    await prisma.category.findUniqueOrThrow({
-        where : {
-            id
-        }
-    })
-
-    const result = await prisma.category.update({
-        where : {
-            id
-        },
-        data : updateData,
-        include : {
-            services : true
-        }
-    })
-    return result;
-}
-
-const deleteCategoryByIdFromDB = async(id : string) => {
-    await prisma.category.findUniqueOrThrow({
-        where : {
-            id
-        } 
-    })
-
-    await prisma.category.delete({
-        where : {
-            id
-        }
-    })  
-
-    return null;
-} 
-
-
 export const categoryService = {
-    createCategoryIntoDB,
+   
     getAllCategroyFromDB,
    getCategoryByIdfromDB,
-   updateCategoryByIdFromDB,
-   deleteCategoryByIdFromDB
-}
+  
+} 

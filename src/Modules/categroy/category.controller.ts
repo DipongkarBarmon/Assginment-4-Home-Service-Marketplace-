@@ -6,20 +6,10 @@ import sendRespons from "../../utility/sendResponse.js";
 import httpsStatus from "http-status"
 
 
-const createCategory = catchAsync(async( req : Request, res : Response, next : NextFunction) => {
-  
-     const result = await categoryService.createCategoryIntoDB(req.body);
-      sendRespons(res, {
-          success : true,
-          statusCode : httpsStatus.CREATED,
-          message : "Category created successfully!",
-          data : result
-      })
-})
 
 const getAllCategory = catchAsync(async( req : Request, res : Response, next : NextFunction) => { 
-
-     const result = await categoryService.getAllCategroyFromDB()
+      const query = req.query
+     const result = await categoryService.getAllCategroyFromDB(query)
      sendRespons(res, {
         success : true,
         statusCode : httpsStatus.OK,
@@ -41,32 +31,10 @@ const getCategoryById = catchAsync(async( req : Request, res : Response, next : 
       })
 })
 
-const updateCategoryById = catchAsync(async( req : Request, res : Response, next : NextFunction) => {
-      const {categoryId} = req.params 
-      const result = await categoryService.updateCategoryByIdFromDB(categoryId as string,req.body)
-      sendRespons(res, {
-        success : true,
-        statusCode : httpsStatus.OK,
-        message : "Category updated successfully!",
-        data : result
-      })  
-})
-
-const deleteCategoryById = catchAsync(async( req : Request, res : Response, next : NextFunction) => {
-      const {categoryId} = req.params 
-      await categoryService.deleteCategoryByIdFromDB(categoryId as string)
-      sendRespons(res, {
-        success : true,
-        statusCode : httpsStatus.OK,
-        message : "Category deleted successfully!",
-        data : null
-      })
-})  
+ 
 
 export const categoryController = {
-    createCategory,
     getAllCategory,
     getCategoryById,
-    deleteCategoryById,
-    updateCategoryById
+  
 }

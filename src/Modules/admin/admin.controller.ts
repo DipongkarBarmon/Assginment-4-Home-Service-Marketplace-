@@ -53,10 +53,49 @@ const deleteUserById = catchAsync(async (req: Request, res: Response,next: NextF
        data : null
     }) 
 })
+
+
+const createCategory = catchAsync(async( req : Request, res : Response, next : NextFunction) => {
+  
+     const result = await adminService.createCategoryIntoDB(req.body);
+      sendRespons(res, {
+          success : true,
+          statusCode : httpsStatus.CREATED,
+          message : "Category created successfully!",
+          data : result
+      })
+})
+
+
+const updateCategoryById = catchAsync(async( req : Request, res : Response, next : NextFunction) => {
+      const {categoryId} = req.params 
+      const result = await adminService.updateCategoryByIdFromDB(categoryId as string,req.body)
+      sendRespons(res, {
+        success : true,
+        statusCode : httpsStatus.OK,
+        message : "Category updated successfully!",
+        data : result
+      })  
+})
+
+const deleteCategoryById = catchAsync(async( req : Request, res : Response, next : NextFunction) => {
+      const {categoryId} = req.params 
+      await adminService.deleteCategoryByIdFromDB(categoryId as string)
+      sendRespons(res, {
+        success : true,
+        statusCode : httpsStatus.OK,
+        message : "Category deleted successfully!",
+        data : null
+      })
+}) 
+
 export const adminController = {
     getAllUsers,
     getUserById,
     updateUserStatus,
-    deleteUserById
+    deleteUserById,
+    createCategory,
+    updateCategoryById,
+    deleteCategoryById
 }
  

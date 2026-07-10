@@ -1,7 +1,7 @@
 import { userStatus } from "../../../generated/prisma/enums.js";
 import { UserWhereInput } from "../../../generated/prisma/models.js";
 import { prisma } from "../../lib/prisma.js";
-import { IUserQuery } from "./admin.interface.js"
+import { ICreateCategory, IUpdateCategory, IUserQuery } from "./admin.interface.js"
 
 const getAllUsersFromDB = async(query: IUserQuery) => {
      const limit = query.limit?Number(query.limit) : 5;
@@ -149,10 +149,69 @@ const deleteUserProfileFromDB = async(userId : string) => {
     return null
 } 
 
+
+
+const createCategoryIntoDB = async (categoryData : ICreateCategory) => {
+      const { name, icon, description } = categoryData;
+       
+      const createdCategory = await prisma.category.create({
+        data: {
+          name,
+          icon,
+          description,
+        },
+        include: {
+          services: true,
+         },  
+      });
+
+      return createdCategory;
+}
+
+
+const updateCategoryByIdFromDB = async(id : string, updateData : IUpdateCategory) => {
+    await prisma.category.findUniqueOrThrow({
+        where : {
+            id
+        }
+    })
+
+    const result = await prisma.category.update({
+        where : {
+            id
+        },
+        data : updateData,
+        include : {
+            services : true
+        }
+    })
+    return result;
+}
+
+const deleteCategoryByIdFromDB = async(id : string) => {
+    await prisma.category.findUniqueOrThrow({
+        where : {
+            id
+        } 
+    })
+
+    await prisma.category.delete({
+        where : {
+            id
+        }
+    })  
+
+    return null;
+} 
+
+
 export const adminService = {
     getAllUsersFromDB,
     getUserByIdFromDB,
     updateUserStatusInDB,
-    deleteUserProfileFromDB
+    deleteUserProfileFromDB,
+    createCategoryIntoDB,
+    updateCategoryByIdFromDB,
+    deleteCategoryByIdFromDB
 }
  

@@ -11,4 +11,8 @@ router.get('/get-user',auth(Role.ADMIN),adminController.getUserById)
 router.put('/update-user-status',auth(Role.ADMIN),adminController.updateUserStatus),
 router.delete('/delete-user',auth(Role.ADMIN),adminController.deleteUserById)
 
+router.post('/create-category',auth(Role.ADMIN),adminController.createCategory)
+router.put('/update-category/:categoryId',auth(Role.ADMIN),adminController.updateCategoryById)
+router.delete('/delete-category/:categoryId',auth(Role.ADMIN),adminController.deleteCategoryById)  
+
 export const adminRouter = router 

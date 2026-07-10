@@ -1,11 +1,9 @@
-export interface ICreateCategory {
-    name : string,
-    icon? : string,
-    description? : string,
-}
+import { CategoryWhereInput } from "../../../generated/prisma/models.js";
 
-export interface IUpdateCategory { 
-    name? : string,
-    icon? : string,
-    description? : string,
+export interface categoryQuery extends CategoryWhereInput {
+    searchTerm? : string,
+    page ? : string,
+    limit? : string,
+    sortOrder? : string,
+    sortBy? : string
 }
