@@ -165,7 +165,7 @@ const updateUserProfileInDB = async(id : string, payload : updateUserProfile) =>
      return transactionResult
 }
 const deleteUserProfileInDB = async(id : string) => {
-
+       
        await prisma.user.delete({
          where : {
             id

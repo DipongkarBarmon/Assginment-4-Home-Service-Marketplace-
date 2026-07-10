@@ -132,6 +132,8 @@ const getBookingByTechnicianIdWithStatus = catchAsync(async (req: Request, res: 
      })     
 })
 
+
+
 export const bookingController = {
     createBooking,
     getBookingWithStatus,

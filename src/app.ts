@@ -11,6 +11,7 @@ import { serviceRouter } from './Modules/service/service.route.js'
 import { categoryRouter } from './Modules/categroy/category.route.js'
 import { availabilityRouter } from './Modules/availability/availablility.route.js'
 import { bookingRouter } from './Modules/bookings/booking.route.js'
+import { adminRouter } from './Modules/admin/admin.route.js'
 const app = express()
 
 app.use(express.json())
@@ -28,6 +29,7 @@ app.get('/',async(req : Request, res : Response) => {
 
 
 app.use('/api/auth',authRouter)
+app.use('/api/admin',adminRouter)
 app.use('/api/technician',technicianRouter)
 app.use('/api/category',categoryRouter)
 app.use('/api/service',serviceRouter)
