@@ -16,7 +16,7 @@ router.post("/decline-booking/:bookingId",auth(Role.TECHNICIAN), bookingControll
 router.post("/start-working-on-booking/:bookingId",auth(Role.TECHNICIAN), bookingController.startWorkingOnBooking)
 router.post("/complete-booking/:bookingId",auth(Role.TECHNICIAN), bookingController.completeBooking)
 router.post("/cancel-booking/:bookingId",auth(Role.CUSTOMER), bookingController.cancelBooking)
-router.get("/get-booking-by-technician-id-with-status/:technicianId/:status",auth(Role.TECHNICIAN), bookingController.getBookingByTechnicianIdWithStatus)   
+router.get("/get-booking-by-technician-id-with-status/:status",auth(Role.TECHNICIAN), bookingController.getBookingByTechnicianIdWithStatus)   
 
 export const bookingRouter = router
 

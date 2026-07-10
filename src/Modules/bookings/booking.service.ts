@@ -26,7 +26,16 @@ const createBookingIntoDB = async (userId: string, serviceId: string, availabili
      if(availability.isBooked){
         throw new Error("This availability is already booked!")
      }
-
+      
+      await prisma.availability.update({
+        where : {
+            id : availabilityId
+        },
+        data : {
+            isBooked : true
+        }
+     })
+     
      const booking = await prisma.booking.create({
         data : {
             customerId : userId,
@@ -57,14 +66,7 @@ const createBookingIntoDB = async (userId: string, serviceId: string, availabili
         }
      })
 
-     await prisma.availability.update({
-        where : {
-            id : availabilityId
-        },
-        data : {
-            isBooked : true
-        }
-     })
+    
        return booking
     })
     return transactionResult

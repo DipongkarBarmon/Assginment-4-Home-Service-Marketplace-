@@ -10,6 +10,7 @@ import { technicianRouter } from './Modules/technician/technician.route.js'
 import { serviceRouter } from './Modules/service/service.route.js'
 import { categoryRouter } from './Modules/categroy/category.route.js'
 import { availabilityRouter } from './Modules/availability/availablility.route.js'
+import { bookingRouter } from './Modules/bookings/booking.route.js'
 const app = express()
 
 app.use(express.json())
@@ -31,6 +32,7 @@ app.use('/api/technician',technicianRouter)
 app.use('/api/category',categoryRouter)
 app.use('/api/service',serviceRouter)
 app.use('/api/availability',availabilityRouter)
+app.use('/api/booking',bookingRouter)
 
 
 
