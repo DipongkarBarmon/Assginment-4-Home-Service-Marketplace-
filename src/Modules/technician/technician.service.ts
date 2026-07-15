@@ -533,8 +533,8 @@ const startWorkingOnBookingIntoDB = async (bookingId: string) => {
             }
         })
 
-        if(booking.status !== BookingStatus.ACCEPTED){
-            throw new Error("Booking is not in accepted status!")
+        if(booking.status !== BookingStatus.PAID){
+            throw new Error("Booking is not in paid status!")
         }
 
         const updatedBooking = await prisma.booking.update({
