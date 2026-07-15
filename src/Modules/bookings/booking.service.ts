@@ -1,4 +1,4 @@
-import { BookingStatus } from "../../../generated/prisma/enums.js"
+import { BookingStatus, PaymentStatus } from "../../../generated/prisma/enums.js"
 import { BookingWhereInput } from "../../../generated/prisma/models.js"
 import { prisma } from "../../lib/prisma.js"
 import { IGETBooking } from "./booking.interface.js"
@@ -223,8 +223,25 @@ const cancelBookingIntoDB = async (bookingId: string) => {
             }
         })
 
-        if(booking.status !== BookingStatus.REQUESTED && booking.status !== BookingStatus.ACCEPTED){
+        if(
+            booking.status !== BookingStatus.REQUESTED &&
+            booking.status !== BookingStatus.ACCEPTED &&
+            booking.status !== BookingStatus.PAID
+        ){
             throw new Error("Booking cannot be cancelled at this stage!")
+        }
+
+        if (booking.status === BookingStatus.PAID) {
+            await prisma.payment.updateMany({
+                where: {
+                    bookingId,
+                    status: PaymentStatus.SUCCESS,
+                },
+                data: {
+                    status: PaymentStatus.REFUNDED,
+                    paidAt: null,
+                },
+            })
         }
 
         await prisma.booking.update({
