@@ -18,4 +18,10 @@ router.put('/update-service/:serviceId',auth(Role.TECHNICIAN ),technicianControl
 router.delete('/delete-service/:serviceId',auth(Role.TECHNICIAN),technicianController.deleteServiceById) 
 
 
+router.post("/accept-booking/:bookingId",auth(Role.TECHNICIAN), technicianController.acceptBooking)  
+router.post("/decline-booking/:bookingId",auth(Role.TECHNICIAN), technicianController.declineBooking)
+router.post("/start-working-on-booking/:bookingId",auth(Role.TECHNICIAN), technicianController.startWorkingOnBooking)
+router.post("/complete-booking/:bookingId",auth(Role.TECHNICIAN), technicianController.completeBooking)
+
+
 export const technicianRouter = router

@@ -1,10 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import { catchAsync } from "../../utility/catchAsync.js";
 import { technicianService } from "./technician.service.js";
-import { send } from "node:process";
 import sendRespons from "../../utility/sendResponse.js";
 import httpsStatus from "http-status"
-import { ITechnicianProfileQuery } from "./technician.interface.js";
+
 
 const createTechnicianProfile = catchAsync(async(req : Request, res : Response, next : NextFunction) => { 
      const userId = req.user?.id;
@@ -117,6 +116,67 @@ const deleteServiceById = catchAsync(async (req: Request, res: Response, next: N
     })
 }) 
 
+
+
+
+const getAllBookingOfTechnician = catchAsync(async (req: Request, res: Response, next :NextFunction) => {
+     const technicianId = req.user.id;
+     const query = req.query;
+     const bookings = await technicianService.getAllBookingOfTechnicianFromDB(technicianId, query);
+     sendRespons(res, {
+        success : true,
+        statusCode : httpsStatus.OK,
+        message : "All bookings of technician retrieved successfully!",
+        data : bookings
+     }) 
+})
+
+
+const acceptBooking = catchAsync(async (req: Request, res: Response, next :NextFunction) => {
+     const bookingId = req.params.bookingId;
+     const booking = await technicianService.acceptBookingIntoDB(bookingId as string);
+     sendRespons(res, {
+        success : true,
+        statusCode : httpsStatus.OK,
+        message : "Booking accepted successfully!",
+        data : booking
+     }) 
+})
+
+
+const declineBooking = catchAsync(async (req: Request, res: Response, next :NextFunction) => {
+     const bookingId = req.params.bookingId;
+     const booking = await technicianService.declineBookingIntoDB(bookingId as string);
+     sendRespons(res, {
+        success : true,
+        statusCode : httpsStatus.OK,
+        message : "Booking declined successfully!",
+        data : booking
+     }) 
+})  
+
+const startWorkingOnBooking = catchAsync(async (req: Request, res: Response, next :NextFunction) => {  
+     const bookingId = req.params.bookingId;
+     const booking = await technicianService.startWorkingOnBookingIntoDB(bookingId as string);
+     sendRespons(res, {
+        success : true,
+        statusCode : httpsStatus.OK,
+        message : "Booking started successfully!",
+        data : booking
+     })  
+})
+
+const completeBooking = catchAsync(async (req: Request, res: Response, next :NextFunction) => { 
+       const bookingId = req.params.bookingId; 
+      const booking = await technicianService.completeBookingIntoDB(bookingId as string);
+      sendRespons(res, {
+        success : true,
+        statusCode : httpsStatus.OK,
+        message : "Booking completed successfully!",
+        data : booking
+     })     
+})
+
 export const technicianController = {
     createTechnicianProfile,
     getTechnicianProfile,
@@ -126,7 +186,12 @@ export const technicianController = {
     getAllTechnicianProfile,
     createService,
     updateServiceById,
-    deleteServiceById
+    deleteServiceById,
+    getAllBookingOfTechnician,
+    acceptBooking,
+    declineBooking,
+    startWorkingOnBooking,
+    completeBooking
 }
 
  

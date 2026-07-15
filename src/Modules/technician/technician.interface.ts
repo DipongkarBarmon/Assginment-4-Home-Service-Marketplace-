@@ -1,5 +1,6 @@
 import e from "express"
-import { TechnicianProfileWhereInput } from "../../../generated/prisma/models.js"
+import { BookingWhereInput, TechnicianProfileWhereInput } from "../../../generated/prisma/models.js"
+import { Booking } from "../../../generated/prisma/browser.js"
 
 export interface ITechnicianProfile {
     bio? : string,
@@ -51,4 +52,12 @@ export interface IUpdateService {
     duration? : number,
     certificates? : string[],
     experienceYears? : number,
+}
+
+
+export interface IGetAllBookingOfTechnician extends BookingWhereInput {
+    page ? : string,
+    limit? : string,
+    sortOrder? : string,
+    sortBy? : string
 }

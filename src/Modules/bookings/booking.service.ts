@@ -1,5 +1,7 @@
 import { BookingStatus } from "../../../generated/prisma/enums.js"
+import { BookingWhereInput } from "../../../generated/prisma/models.js"
 import { prisma } from "../../lib/prisma.js"
+import { IGETBooking } from "./booking.interface.js"
 
 const createBookingIntoDB = async (userId: string, serviceId: string, availabilityId: string) => {
      
@@ -71,37 +73,7 @@ const createBookingIntoDB = async (userId: string, serviceId: string, availabili
     })
     return transactionResult
 }
-
-
-const getBookingWithStatusFromDB = async (status : BookingStatus) => {
-   
-    const booking = await prisma.booking.findMany({
-        where : {
-           status 
-        },
-        include : {
-           technician : {
-            include : {
-                user : {
-                    omit : {
-                        password : true
-                    }
-                },
-                services : {
-                   include : {
-                      category : true
-                   },
-                },
-                availabilities : true,
-                reviews : true
-
-            },
-          
-           }
-        }
-     })
-     return booking
-} 
+ 
 
 const getBookingByIdFromDB = async (bookingId : string) => {
     const booking = await prisma.booking.findUniqueOrThrow({
@@ -131,280 +103,117 @@ const getBookingByIdFromDB = async (bookingId : string) => {
      })
      return booking
 }
-
-const getAllBookingFromDB = async () => {
-    const booking = await prisma.booking.findMany({
-        include : {
-           technician : {
-            include : {
-                user : {
-                    omit : {
-                        password : true
-                    }
-                },
-                services : {
-                   include : {
-                      category : true
-                   },
-                },
-                availabilities : true,
-                reviews : true
-
-            },
-          
-           }
-        }
-     })
-     return booking
-} 
-
-
-const getUserBookingFromDB = async (userId : string) => {
-    const booking = await prisma.booking.findMany({
-        where : {
-            customerId : userId
-        },
-        include : {
-           technician : {
-            include : {
-                user : {
-                    omit : {
-                        password : true
-                    }
-                },
-                services : {
-                   include : {
-                      category : true
-                   },
-                },
-                availabilities : true,
-                reviews : true
-
-            },
-          
-           }
-        }
-     })
-     return booking
-}   
-
-const acceptBookingIntoDB = async (bookingId : string) => {
-    const transactionResult = await prisma.$transaction(async (prisma) => {
-        const booking = await prisma.booking.findUniqueOrThrow({
-            where : {
-                id : bookingId
-            }
-        })    
-
-        if(booking.status !== BookingStatus.REQUESTED){
-            throw new Error("Booking is not in requested status!")
-        }
-
-        const updatedBooking = await prisma.booking.update({
-            where : {
-                id : bookingId
-            },
-            data : {
-                status : BookingStatus.ACCEPTED
-            },
-            include : {
-                technician : {
-                 include : {
-                     user : {
-                         omit : {
-                             password : true
-                         }
-                     },
-                     services : {
-                        include : {
-                           category : true
-                        },
-                     },
-                     availabilities : true,
-                     reviews : true
  
-                 },
-               
-                }
-             }  
+
+
+const getUserBookingFromDB = async (userId : string, query: IGETBooking) => {
+    
+     const limit = query.limit?Number(query.limit) : 10;
+     const page = query.page?Number(query.page): 1;
+     const skip = (page -1)*limit;
+     const sortBy = query.sortBy? query.sortBy : "createdAt";
+     const sortOrder = query.sortOrder? query.sortOrder : "desc";
+
+     const andCondition : BookingWhereInput[] = []
+
+     if(query.searchTerm){
+        andCondition.push({
+            OR : [
+                {
+                    service : {
+                        description : {
+                            contains : query.searchTerm,
+                            mode : "insensitive"
+                        }
+                    }
+                },
+                {
+                    technician : {
+                        user : {
+                            name : {
+                                contains : query.searchTerm,
+                                mode : "insensitive"
+                            }
+                        }
+                    }
+                },
+              
+            ]
         })
+     }
 
-        return updatedBooking
-    })
+     if(query.status){
+        andCondition.push({
+            status : query.status
+        })
+     }
 
-    return transactionResult
-}
+     if(query.createdAt){
+        andCondition.push({
+            createdAt : query.createdAt
+        })
+     }
+     
+     if(query.technicianId){
+        andCondition.push({
+            technicianId : query.technicianId
+        })
+     }
+     if(query.serviceId){
+        andCondition.push({
+            serviceId : query.serviceId
+        })
+     } 
 
-const declineBookingIntoDB = async (bookingId: string) => {
-  const transactionResult = await prisma.$transaction(async (tx) => {
-    const booking = await tx.booking.findUniqueOrThrow({
-      where: {
-        id: bookingId,
-      },
-    });
+     if(query.availabilityId){
+        andCondition.push({
+            availabilityId : query.availabilityId
+        })
+     }
+     
+     if(query.customerId){
+        andCondition.push({
+            customerId : query.customerId
+        })
+     }
 
-    if (booking.status !== BookingStatus.REQUESTED) {
-      throw new Error("Booking is not in requested status!");
-    }
-
-    await tx.booking.update({
-      where: {
-        id: bookingId,
-      },
-      data: {
-        status: BookingStatus.DECLINED,
-      },
-    });
+     const whereCondition : BookingWhereInput = andCondition.length > 0 ? { AND : andCondition } : {}   
 
     
-    await tx.availability.update({
-      where: {
-        id: booking.availabilityId,
-      },
-      data: {
-        isBooked: false,
-      },
-    });
-
-   
-    const updatedBooking = await tx.booking.findUniqueOrThrow({
-      where: {
-        id: bookingId,
-      },
-      include: {
-        technician: {
-          include: {
-            user: {
-              omit: {
-                password: true,
-              },
-            },
-            services: {
-              include: {
-                category: true,
-              },
-            },
-            availabilities: true,
-            reviews: true,
-          },
+    const booking = await prisma.booking.findMany({
+        where : {
+            customerId : userId,
+            ...whereCondition
         },
-      },
-    });
-
-    return updatedBooking;
-  });
-
-  return transactionResult;
-};
-
-const startWorkingOnBookingIntoDB = async (bookingId: string) => {
-    const transactionResult = await prisma.$transaction(async (prisma) => {
-        const booking = await prisma.booking.findUniqueOrThrow({
-            where : {
-                id : bookingId
-            }
-        })
-
-        if(booking.status !== BookingStatus.ACCEPTED){
-            throw new Error("Booking is not in accepted status!")
-        }
-
-        const updatedBooking = await prisma.booking.update({
-            where : {
-                id : bookingId
-            },
-            data : {
-                status : BookingStatus.IN_PROGRESS
-            },
+        skip,
+        take : limit,
+        orderBy : {
+            [sortBy] : sortOrder
+        },
+        include : {
+           technician : {
             include : {
-                technician : {
-                 include : {
-                     user : {
-                         omit : {
-                             password : true
-                         }
-                     },
-                     services : {
-                        include : {
-                           category : true
-                        },
-                     },
-                     availabilities : true,
-                     reviews : true
- 
-                 },
-               
-                }
-             }  
-        })
+                user : {
+                    omit : {
+                        password : true
+                    }
+                },
+                services : {
+                   include : {
+                      category : true
+                   },
+                },
+                availabilities : true,
+                reviews : true
 
-        return updatedBooking
-    })
-
-    return transactionResult
-}   
-
-
-const completeBookingIntoDB = async (bookingId: string) => {
-    const transactionResult = await prisma.$transaction(async (prisma) => {
-        const booking = await prisma.booking.findUniqueOrThrow({
-            where : {
-                id : bookingId
-            }
-        })
-
-        if(booking.status !== BookingStatus.IN_PROGRESS){
-            throw new Error("Booking is not in progress status!")
+            },
+          
+           }
         }
-        
-        await prisma.technicianProfile.update({
-            where : {
-                id : booking.technicianId
-            },
-            data : {
-                completedJobs : {
-                    increment : 1
-                }   
-            }
-        })
+     })
+     return booking
+}         
 
-        
-
-        const updatedBooking = await prisma.booking.update({
-            where : {
-                id : bookingId
-            },
-            data : {
-                status : BookingStatus.COMPLETED
-            },
-            include : {
-                technician : {
-                
-                 include : {
-                     user : {
-                         omit : {
-                             password : true
-                         }
-                     },
-                     services : {
-                        include : {
-                           category : true
-                        },
-                     },
-                     availabilities : true,
-                     reviews : true
- 
-                 },
-               
-                }
-             }  
-        })
-
-        return updatedBooking
-    })
-
-    return transactionResult
-}
 
 const cancelBookingIntoDB = async (bookingId: string) => {
     const transactionResult = await prisma.$transaction(async (prisma) => {
@@ -467,54 +276,12 @@ const cancelBookingIntoDB = async (bookingId: string) => {
 
     return transactionResult
 }
-
-const getBookingByTechnicianIdWithStatusFromDB = async (technicianId : string,status : BookingStatus) => {
-
-    await prisma.technicianProfile.findUniqueOrThrow({
-        where : {
-            id : technicianId
-        }
-     }) 
-
-    const booking = await prisma.booking.findMany({
-        where : {
-            technicianId,
-            status
-        },           
-        include : {
-           technician : {
-            include : {
-                user : {
-                    omit : {
-                        password : true
-                    }
-                },
-                services : {
-                   include : {
-                      category : true
-                   },
-                },
-                availabilities : true,
-                reviews : true
-
-            },
-          
-           }
-        }
-     })
-     return booking
-}   
+  
 export const bookingService = {
     createBookingIntoDB,
-    getBookingWithStatusFromDB,
     getBookingByIdFromDB,
-    getAllBookingFromDB,
-    getUserBookingFromDB,
-    acceptBookingIntoDB,
-    declineBookingIntoDB,
-    startWorkingOnBookingIntoDB,
-    completeBookingIntoDB,
+    getUserBookingFromDB, 
     cancelBookingIntoDB,
-    getBookingByTechnicianIdWithStatusFromDB,
+     
      
 }
