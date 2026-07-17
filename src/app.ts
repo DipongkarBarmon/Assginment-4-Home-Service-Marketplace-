@@ -14,6 +14,7 @@ import { bookingRouter } from './Modules/bookings/booking.route.js'
 import { adminRouter } from './Modules/admin/admin.route.js'
  
 import { reviewRouter } from './Modules/review/review.route.js'
+import { paymentRouter } from './Modules/payment/payment.route.js'
 const app = express()
 
 app.use(express.json())
@@ -37,7 +38,7 @@ app.use('/api/category',categoryRouter)
 app.use('/api/service',serviceRouter)
 app.use('/api/availability',availabilityRouter)
 app.use('/api/booking',bookingRouter)
- 
+app.use('/api/payment',paymentRouter)
 app.use('/api/reviews',reviewRouter)
 
 

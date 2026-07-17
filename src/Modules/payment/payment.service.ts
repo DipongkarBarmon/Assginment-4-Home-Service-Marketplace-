@@ -4,11 +4,14 @@ import { TCreatePayment, IpaymentQuery } from "./payment.interface.js";
 import Stripe from "stripe";
 import config from '../../config/index.js';
 import { stripe } from "../../lib/stripe.js";
+import { paymentUtility } from "./payment.uitility.js";
+import { PaymentWhereInput } from "../../../generated/prisma/models.js";
  
 
  
 
 const createCheckoutSession = async (customerId: string, payload: TCreatePayment) => {
+  const transactionResult = await prisma.$transaction(async (prisma) => {
   const booking = await prisma.booking.findFirstOrThrow({
     where: {
       id: payload.bookingId,
@@ -25,7 +28,7 @@ const createCheckoutSession = async (customerId: string, payload: TCreatePayment
     throw new Error('Booking is not accepted yet.');
   }
 
-  const existingPayment = await prisma.payment.findUniqueOrThrow({ 
+  const existingPayment = await prisma.payment.findUnique({ 
     where: {
        bookingId: booking.id 
       }
@@ -35,6 +38,26 @@ const createCheckoutSession = async (customerId: string, payload: TCreatePayment
      throw new Error('This booking has already been paid.');
   }
 
+   let stripeCustomerId = booking.customer.stripeCustomerId;
+
+  if (!stripeCustomerId) {
+    const stripeCustomer = await stripe.customers.create({
+      name: booking.customer.name,
+      email: booking.customer.email,
+    });
+
+    stripeCustomerId = stripeCustomer.id;
+
+    await prisma.user.update({
+      where: {
+        id: booking.customer.id,
+      },
+      data: {
+        stripeCustomerId,
+      },
+    });
+  }
+
   // create checkout session
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
@@ -42,10 +65,10 @@ const createCheckoutSession = async (customerId: string, payload: TCreatePayment
       {
         price_data: {
           currency: 'bdt',
-          // product_data: {
-          //   name: booking.service?.name || booking.service?.title || 'Service Booking',
-          //   description: `Booking for service ${booking.service?.name ?? booking.service?.title ?? ''}`,
-          // },
+          product_data: {
+            name: booking.service?.title || 'Service Booking',
+            description: booking.service.description ?? ""
+          },
           unit_amount: Math.round(Number(booking.price) * 100),
         },
         quantity: 1,
@@ -58,67 +81,75 @@ const createCheckoutSession = async (customerId: string, payload: TCreatePayment
       bookingId: booking.id,
     },
   });
+   
+  if (!existingPayment) {
+    await prisma.payment.create({
+      data: {
+        bookingId: booking.id,
+        customerId: booking.customerId,
+        amount: booking.price ,
+        provider: PaymentProvider.STRIPE,
+        paymentMethod: 'stripe',
+        status: PaymentStatus.PENDING,
+        paidAt: null,
+        currency: 'bdt',
+        stripeCustomerId: stripeCustomerId,
+        stripeCheckoutSessionId: session.id,
+      },
+    });
+  } else {
+    await prisma.payment.update({
+      where: {
+        bookingId: booking.id,
+      },
 
- 
-  await prisma.payment.create({
-    data: {
-      bookingId: booking.id,
-      amount: booking.price as any,
-      provider: PaymentProvider.STRIPE,
-      paymentMethod: 'stripe',
-      status: PaymentStatus.PENDING,
-      customerId: booking.customerId,
-      stripeCheckoutSessionId: session.id,
-      currency: 'bdt',
-    },
-  });
+      data: {
+        stripeCustomerId: stripeCustomerId,
+        stripeCheckoutSessionId: session.id,
+        status: PaymentStatus.PENDING,
+      },
+    });
+  }
+   return session.url;
+  })
 
-  return { checkoutUrl: session.url, sessionId: session.id };
+  return transactionResult; 
+
 };
+
 
   
 const handleStripeWebhook = async (payload: Buffer, signature: string) => {
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
-  const event = stripe.webhooks.constructEvent(payload, signature, endpointSecret);
+  const endpointSecret =  config.stripe_webhook_secret;
+  const event = stripe.webhooks.constructEvent(
+    payload,
+     signature, 
+     endpointSecret
+    );
 
   console.log('Received Stripe event:', event.type);
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const sessionId = session.id;
+     switch (event.type) {
+        case 'checkout.session.completed':
+          await paymentUtility.handleCheckoutCompleted(event.data.object)
+          break;
+        case 'checkout.session.expired':
+          await paymentUtility.handleSessionExpired(event.data.object as Stripe.Checkout.Session)
+          break;
+        case 'checkout.session.async_payment_failed' :
+          await paymentUtility.handleSessionExpired(event.data.object as Stripe.Checkout.Session)
+          break;
+        case "payment_intent.payment_failed":
+          await paymentUtility.handlePaymentFailed(event.data.object as Stripe.PaymentIntent)
+          break;
 
-    const paymentRecord = await prisma.payment.findUnique({ where: { stripeCheckoutSessionId: sessionId } });
-    if (!paymentRecord) {
-      console.warn('Payment record not found for session', sessionId);
-      return;
-    }
-
-    await prisma.$transaction(async (tx) => {
-      await tx.payment.update({
-        where: { id: paymentRecord.id },
-        data: {
-          status: PaymentStatus.SUCCESS,
-          paidAt: new Date(),
-          transactionId: session.payment_intent as string | null,
-          stripePaymentIntentId: session.payment_intent as string | null,
-        },
-      });
-
-      await tx.booking.update({
-        where: { id: paymentRecord.bookingId },
-        data: { status: BookingStatus.PAID },
-      });
-    });
-  }
-
-  if (event.type === 'checkout.session.expired' || event.type === 'checkout.session.async_payment_failed') {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const sessionId = session.id;
-    const paymentRecord = await prisma.payment.findUnique({ where: { stripeCheckoutSessionId: sessionId } });
-    if (!paymentRecord) return;
-    await prisma.payment.update({ where: { id: paymentRecord.id }, data: { status: PaymentStatus.FAILED } });
-  }
+        default:
+          // Unexpected event type
+          console.log(`Unhandled event type ${event.type}.`);
+          break;
+      }
 };
+
 
 const getPaymentHistory = async (userId: string, role: string, query: IpaymentQuery) => {
   const limit = query.limit ? Number(query.limit) : 10;
@@ -126,43 +157,73 @@ const getPaymentHistory = async (userId: string, role: string, query: IpaymentQu
   const skip = (page - 1) * limit;
   const sortBy = query.sortBy ? query.sortBy : 'createdAt';
   const sortOrder = query.sortOrder ? query.sortOrder : 'desc';
+  
+   const andCondition : PaymentWhereInput[] = []
 
-  const where: any = {};
-  if (query.id) where.id = query.id as any;
-  if (query.status) where.status = query.status as any;
-  if (query.bookingId) where.bookingId = query.bookingId as any;
-  if (query.customerId) where.customerId = query.customerId as any;
-  if (role === Role.CUSTOMER) where.customerId = userId;
+         if(query.status){
+              andCondition.push({
+                  status:query.status
+              })
+          }
+           
+           if(query.id){
+              andCondition.push({
+                  id:query.id
+              })
+          }
+  
+       
+         
+        if(query.bookingId){
+            andCondition.push({
+                bookingId:query.bookingId 
+            })
+        }
 
-  const payments = await prisma.payment.findMany({
-    where,
+        if(query.paymentMethod){
+            andCondition.push({
+                paymentMethod:query.paymentMethod
+            })
+        }
+        if(query.provider){
+            andCondition.push({
+                provider:query.provider
+            })
+        }
+        if(query.customerId){
+            andCondition.push({
+                customerId:query.customerId
+            })
+        }
+
+      
+
+  await prisma.payment.findMany({
+    where: {
+      AND: andCondition
+    },
     take: limit,
     skip,
-    orderBy: { [sortBy]: sortOrder as any },
-    select: {
-      id: true,
-      bookingId: true,
-      amount: true,
-      provider: true,
-      paymentMethod: true,
-      transactionId: true,
-      status: true,
-      paidAt: true,
-      createdAt: true,
-      currency: true,
-      customerId: true,
-    },
+    orderBy: { 
+      [sortBy]: sortOrder
+     },
+
+     include: {
+      booking: {
+        include: {
+          service: true,
+          customer: {
+            omit: {
+              password: true
+            }, 
+          },
+        },
+      },
+    },  
+     
   });
 
-  return {
-    data: payments,
-    meta: {
-      page,
-      limit,
-      total: payments.length,
-      totalPage: Math.ceil(payments.length / limit),
-    },
-  };
+  
 };
 
 export const paymentService = {

@@ -4,12 +4,11 @@ model Payment {
   amount                  Decimal         @db.Decimal(10, 2)
   provider                PaymentProvider
   paymentMethod           String
-  transactionId           String?         @unique
   status                  PaymentStatus   @default(PENDING)
   paidAt                  DateTime?
   createdAt               DateTime        @default(now())
   updatedAt               DateTime        @updatedAt
-  currency                String          @default("usd")
+  currency                String          @default("bdt")
   customerId              String          @db.Uuid
   stripeChargeId          String?         @unique
   stripeCheckoutSessionId String?         @unique

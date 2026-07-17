@@ -113,34 +113,7 @@ const getUserBookingFromDB = async (userId : string, query: IGETBooking) => {
      const skip = (page -1)*limit;
      const sortBy = query.sortBy? query.sortBy : "createdAt";
      const sortOrder = query.sortOrder? query.sortOrder : "desc";
-
      const andCondition : BookingWhereInput[] = []
-
-     if(query.searchTerm){
-        andCondition.push({
-            OR : [
-                {
-                    service : {
-                        description : {
-                            contains : query.searchTerm,
-                            mode : "insensitive"
-                        }
-                    }
-                },
-                {
-                    technician : {
-                        user : {
-                            name : {
-                                contains : query.searchTerm,
-                                mode : "insensitive"
-                            }
-                        }
-                    }
-                },
-              
-            ]
-        })
-     }
 
      if(query.status){
         andCondition.push({

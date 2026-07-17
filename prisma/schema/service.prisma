@@ -7,6 +7,7 @@ model Service {
   categoryId      String
   technicianId    String
   isActive        Boolean           @default(true)
+  averageRating  Decimal        @default(0) @db.Decimal(2, 1)
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   certificates    String[]
@@ -14,6 +15,7 @@ model Service {
   bookings        Booking[]
   category        Category          @relation(fields: [categoryId], references: [id])
   technician      TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
-
+  reviews Review[]
   @@map("services")
+  
 }

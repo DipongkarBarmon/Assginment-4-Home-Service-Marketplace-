@@ -9,7 +9,6 @@ const router = Router()
 router.post("/create-booking",auth(Role.CUSTOMER), bookingController.createBooking)
 router.get("/get-booking-by-id/:bookingId",auth(Role.CUSTOMER), bookingController.getBookingById)
 router.get("/get-user-booking",auth(Role.CUSTOMER), bookingController.getUserBooking)
-
 router.post("/cancel-booking/:bookingId",auth(Role.CUSTOMER), bookingController.cancelBooking)
    
 
