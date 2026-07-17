@@ -150,7 +150,7 @@ const getAllTechnicianProfileFromDB = async (query : ITechnicianProfileQuery) =>
 
         if(query.isVerified) {
             andCondition.push({
-                isVerified : query.isVerified
+                isVerified : Boolean(query.isVerified)
             })
         }
         if(query.averageRating) {
@@ -242,20 +242,33 @@ const createServiceIntoDB = async (userId : string, serviceData : ICreateService
       if(!user.technicianProfiles) {
         throw new Error("Technician profile does not exist for this user!")     
       }
+     
+      await prisma.category.findUniqueOrThrow({
+        where: {
+        id:serviceData.categoryId,
+        },
+      });
 
-     const exists = user.technicianProfiles.services.some(
-        (service) => service.categoryId === serviceData.categoryId
-      );
+        const existingService = await prisma.service.findFirst({
+            where: {
+                technicianId: user.technicianProfiles.id,
+                categoryId: serviceData.categoryId,
+                title: {
+                    equals: serviceData.title,
+                    mode: "insensitive"
+                }
+            }
+        });
 
-      if (exists) {
-        throw new Error("A service with this category already exists.");
-      }
+        if (existingService) {
+           throw new Error("This service already exists in this category.");
+        }
 
-      console.log("Hello")
+    //   console.log("Hello")
       
       const technicianProfileId = user.technicianProfiles.id;
     
-     console.log("Technician Profile ID:", technicianProfileId); // Log the technician profile ID to verify it's being retrieved correctly
+    //  console.log("Technician Profile ID:", technicianProfileId); // Log the technician profile ID to verify it's being retrieved correctly
       const createdService = await prisma.service.create({
         data : {
              technicianId : technicianProfileId,

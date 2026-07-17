@@ -200,23 +200,26 @@ const cancelBookingIntoDB = async (bookingId: string) => {
             throw new Error("Booking cannot be cancelled at this stage!")
         }
 
-        await prisma.booking.update({
-            where : {
-                id : bookingId
-            },
-            data : {
-                status : BookingStatus.CANCELLED
-            }
-        })
-
         await prisma.availability.update({
             where : {
-                id : booking.availabilityId
+                id : booking.availabilityId!
             },
             data : {
                 isBooked : false
             }
         })
+
+        await prisma.booking.update({
+            where : {
+                id : bookingId
+            },
+            data : {
+                status : BookingStatus.CANCELLED,
+                availabilityId : null
+            }
+        })
+
+    
 
         const updatedBooking = await prisma.booking.findUniqueOrThrow({
             where : {

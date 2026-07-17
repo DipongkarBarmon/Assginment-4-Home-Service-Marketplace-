@@ -63,13 +63,13 @@ const getAllServiceFromDB = async(query: IServiceQuery) => {
 
      if(query.duration) {
         andCondition.push({
-            duration : query.duration
+            duration :  Number(query.duration)
         })
      }
 
      if(query.experienceYears) {
         andCondition.push({
-            experienceYears : query.experienceYears
+            experienceYears : Number(query.experienceYears)
         })
      }  
 
