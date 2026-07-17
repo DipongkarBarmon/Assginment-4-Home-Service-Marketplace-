@@ -22,7 +22,7 @@ const createReview = catchAsync(async (req : Request, res : Response, next : Nex
 
 });
 
-const getMyReviews = catchAsync(async (req : Request, res : Response, next : NextFunction) => {
+const getReviews = catchAsync(async (req : Request, res : Response, next : NextFunction) => {
   const result = await ReviewService.getReviews(
     req.user?.id as string,
     req.query
@@ -36,31 +36,9 @@ const getMyReviews = catchAsync(async (req : Request, res : Response, next : Nex
   });
 });
 
-const getServiceReviews = catchAsync(async (req : Request, res : Response, next : NextFunction) => {
-  const result = await ReviewService.getServiceReviews(req.params.serviceId as string,req.query);
-
-  sendRespons(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Reviews retrieved successfully.",
-    data: result
-   
-  });
-});
-
-
-const getTechnicianReviews = catchAsync(async (req : Request, res : Response, next : NextFunction) => {
-  const result = await ReviewService.getTechnicianReviews(req.params.technicianId as string,req.query);
-
-  sendRespons(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Technician reviews retrieved successfully.",
-   
-    data: result,
-    
-  });
-});
+ 
+ 
+ 
 
 const updateReview = catchAsync(async (req : Request, res : Response, next : NextFunction) => {
   const result = await ReviewService.updateReview(
@@ -93,9 +71,8 @@ const deleteReview = catchAsync(async (req : Request, res : Response, next : Nex
 
 export const reviewController = {
   createReview,
-  getMyReviews,
-  getServiceReviews,
-  getTechnicianReviews,
+  getReviews,
+ 
   updateReview,
   deleteReview,
 };

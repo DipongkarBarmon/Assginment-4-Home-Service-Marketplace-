@@ -7,7 +7,7 @@ import { BookingStatus, PaymentStatus } from "../../../generated/prisma/enums.js
 
 
 const handleCheckoutCompleted = async(session : Stripe.Checkout.Session) => {
-
+      console.log('Handling checkout.session.completed event for session:', session.id);
       const payment = await prisma.payment.findUniqueOrThrow({
         where: {
           stripeCheckoutSessionId: session.id,

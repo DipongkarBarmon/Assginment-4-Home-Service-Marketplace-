@@ -10,11 +10,9 @@ const router =Router();
 
 router.post("/",auth(Role.CUSTOMER), reviewController.createReview);
 
-router.get("/my",auth(Role.CUSTOMER),reviewController.getMyReviews);
+router.get("/get-reviews",auth(Role.CUSTOMER),reviewController.getReviews);
 
-router.get( "/service/:serviceId",reviewController.getServiceReviews);
-
-router.get("/technician/:technicianId",reviewController.getTechnicianReviews);
+ 
 
 router.patch("/:id",auth(Role.CUSTOMER),reviewController.updateReview
 );

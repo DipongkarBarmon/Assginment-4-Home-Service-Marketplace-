@@ -120,12 +120,17 @@ const createCheckoutSession = async (customerId: string, payload: TCreatePayment
 
   
 const handleStripeWebhook = async (payload: Buffer, signature: string) => {
+  //  console.log('Number of events:');
   const endpointSecret =  config.stripe_webhook_secret;
+  // console.log('Received Stripe webhook event with payload length:', payload);
+  // console.log('Received Stripe webhook event with signature:', signature);
+  // console.log('Using Stripe webhook endpoint secret:', endpointSecret);
   const event = stripe.webhooks.constructEvent(
-    payload,
+     payload,
      signature, 
      endpointSecret
     );
+    console.log("Hello from stripe webhook handler");
 
   console.log('Received Stripe event:', event.type);
 
@@ -197,8 +202,7 @@ const getPaymentHistory = async (userId: string, role: string, query: IpaymentQu
         }
 
       
-
-  await prisma.payment.findMany({
+const paymentHistory = await prisma.payment.findMany({
     where: {
       AND: andCondition
     },
@@ -223,7 +227,7 @@ const getPaymentHistory = async (userId: string, role: string, query: IpaymentQu
      
   });
 
-  
+   return paymentHistory;
 };
 
 export const paymentService = {

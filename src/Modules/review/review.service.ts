@@ -159,92 +159,7 @@ const getReviews = async(userId : string,query : IGetReviews) =>{
     
 }
 
-const getServiceReviews = async (serviceId: string,query :IServiceReview) => {
-  
-    await prisma.service.findUniqueOrThrow({
-        where: {
-        id: serviceId,
-        },
-    });
-
-     const limit = query.limit?Number(query.limit) : 10;
-     const page = query.page?Number(query.page): 1;
-     const skip = (page -1)*limit;
-     const sortBy = query.sortBy? query.sortBy : "createdAt";
-     const sortOrder = query.sortOrder? query.sortOrder : "desc";
-
-
-  const reviews = await prisma.review.findMany({
-    where: {
-      serviceId,
-    },
-    skip,
-    take: limit,
-     orderBy : {
-            [sortBy] : sortOrder
-        },
-    include: {  
-        technician: {
-            include : {
-                user : {
-                    omit : {
-                        password : true
-                    }
-                }
-            }
-        },
-        customer: {
-            omit : {
-              password : true
-            }
-        }
-    },
-  });
  
-  return reviews
-
-};
-
-const getTechnicianReviews = async (technicianId: string,query :IServiceReview) => {
-  
-    await prisma.technicianProfile.findUniqueOrThrow({
-        where: {
-            id: technicianId,
-        },
-    });
-
-     const limit = query.limit?Number(query.limit) : 10;
-     const page = query.page?Number(query.page): 1;
-     const skip = (page -1)*limit;
-     const sortBy = query.sortBy? query.sortBy : "createdAt";
-     const sortOrder = query.sortOrder? query.sortOrder : "desc";
-
-   
-
-  const reviews = await prisma.review.findMany({
-    where: {
-      technicianId,
-    },
-    skip,
-    take: limit,
-     orderBy : {
-            [sortBy] : sortOrder
-        },
-    include: {
-        customer : {
-            omit : {
-                password : true
-            }
-        },
-        service : true  
-    },
-    
-  });
-
-  return reviews
-
-};
-
 
 const updateReview = async (
   customerId: string,
@@ -376,8 +291,6 @@ const deleteReview = async (
 export const ReviewService = {
   createReview,
   getReviews,
-  getServiceReviews,
-  getTechnicianReviews,
   updateReview,
   deleteReview,
 };

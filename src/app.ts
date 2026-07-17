@@ -17,6 +17,8 @@ import { reviewRouter } from './Modules/review/review.route.js'
 import { paymentRouter } from './Modules/payment/payment.route.js'
 const app = express()
 
+app.use('/api/payment/webhook',express.raw({type : 'application/json'}))
+
 app.use(express.json())
 app.use(express.urlencoded({extended : true}))
 app.use(express.text())
