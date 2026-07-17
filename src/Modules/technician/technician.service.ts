@@ -505,7 +505,7 @@ const declineBookingIntoDB = async (bookingId: string) => {
     
     await tx.availability.update({
       where: {
-        id: booking.availabilityId,
+        id: booking.availabilityId!,
       },
       data: {
         isBooked: false,
