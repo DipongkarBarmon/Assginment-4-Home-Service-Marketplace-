@@ -361,6 +361,7 @@ const deleteReview = async (
     await tx.service.update({
       where: {
         id: review.serviceId,
+        
       },
       data: {
         averageRating: serviceStats._avg.rating ?? 0,
