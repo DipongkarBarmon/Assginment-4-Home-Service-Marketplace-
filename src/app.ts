@@ -12,7 +12,7 @@ import { categoryRouter } from './Modules/categroy/category.route.js'
 import { availabilityRouter } from './Modules/availability/availablility.route.js'
 import { bookingRouter } from './Modules/bookings/booking.route.js'
 import { adminRouter } from './Modules/admin/admin.route.js'
-import { paymentRouter } from './Modules/payment/payment.route.js'
+ 
 import { reviewRouter } from './Modules/review/review.route.js'
 const app = express()
 
@@ -37,7 +37,7 @@ app.use('/api/category',categoryRouter)
 app.use('/api/service',serviceRouter)
 app.use('/api/availability',availabilityRouter)
 app.use('/api/booking',bookingRouter)
-app.use('/api/payments',paymentRouter)
+ 
 app.use('/api/reviews',reviewRouter)
 
 

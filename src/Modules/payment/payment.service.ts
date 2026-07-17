@@ -1,175 +1,172 @@
-import { BookingStatus, PaymentStatus } from "../../../generated/prisma/enums.js";
-import { PaymentWhereInput } from "../../../generated/prisma/models.js";
+import { BookingStatus, PaymentStatus, PaymentProvider, Role } from "../../../generated/prisma/enums.js";
 import { prisma } from "../../lib/prisma.js";
-import { IConfirmPayment, ICreatePayment, IGetPaymentQuery } from "./payment.interface.js";
+import { TCreatePayment, IpaymentQuery } from "./payment.interface.js";
+import Stripe from "stripe";
+import config from '../../config/index.js';
+import { stripe } from "../../lib/stripe.js";
+ 
 
-const createPaymentIntoDB = async (userId: string, payload: ICreatePayment) => {
-  const { bookingId, provider, paymentMethod, amount } = payload;
+ 
 
-  const transactionResult = await prisma.$transaction(async (tx) => {
-    const booking = await tx.booking.findUniqueOrThrow({
-      where: { id: bookingId },
-      include: { payments: true },
-    });
-
-    if (booking.customerId !== userId) {
-      throw new Error("Forbidden! You can only pay for your own booking.");
-    }
-
-    if (booking.status !== BookingStatus.ACCEPTED) {
-      throw new Error("Payment can only be created for accepted bookings.");
-    }
-
-    if (booking.payments?.status === PaymentStatus.SUCCESS) {
-      throw new Error("Payment is already completed for this booking.");
-    }
-
-    const parsedAmount = amount ?? Number(booking.price);
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      throw new Error("Invalid payment amount.");
-    }
-
-    if (booking.payments) {
-      return tx.payment.update({
-        where: { bookingId },
-        data: {
-          amount: parsedAmount,
-          provider,
-          paymentMethod,
-          status: PaymentStatus.PENDING,
-          transactionId: null,
-          paidAt: null,
-        },
-        include: { booking: true },
-      });
-    }
-
-    return tx.payment.create({
-      data: {
-        bookingId,
-        amount: parsedAmount,
-        provider,
-        paymentMethod,
-        status: PaymentStatus.PENDING,
-      },
-      include: { booking: true },
-    });
+const createCheckoutSession = async (customerId: string, payload: TCreatePayment) => {
+  const booking = await prisma.booking.findFirstOrThrow({
+    where: {
+      id: payload.bookingId,
+      customerId,
+    },
+    include: {
+      service: true,
+      customer: true,
+    },
   });
 
-  return transactionResult;
-};
-
-const confirmPaymentIntoDB = async (userId: string, payload: IConfirmPayment) => {
-  if (!payload.paymentId && !payload.bookingId) {
-    throw new Error("paymentId or bookingId is required to confirm payment.");
+ 
+  if (booking.status !== BookingStatus.ACCEPTED) {
+    throw new Error('Booking is not accepted yet.');
   }
 
-  const transactionResult = await prisma.$transaction(async (tx) => {
-    const payment = await tx.payment.findFirstOrThrow({
-      where: payload.paymentId ? { id: payload.paymentId } : { bookingId: payload.bookingId },
-      include: { booking: true },
-    });
+  const existingPayment = await prisma.payment.findUniqueOrThrow({ 
+    where: {
+       bookingId: booking.id 
+      }
+   });
 
-    if (payment.booking.customerId !== userId) {
-      throw new Error("Forbidden! You can only confirm your own payment.");
-    }
+  if (existingPayment && existingPayment.status === PaymentStatus.SUCCESS) {
+     throw new Error('This booking has already been paid.');
+  }
 
-    const status = payload.status ?? PaymentStatus.SUCCESS;
-    const transactionId =
-      payload.transactionId ??
-      (status === PaymentStatus.SUCCESS ? `txn_${Date.now()}_${Math.floor(Math.random() * 10000)}` : null);
-
-    const updatedPayment = await tx.payment.update({
-      where: { id: payment.id },
-      data: {
-        status,
-        transactionId,
-        paidAt: status === PaymentStatus.SUCCESS ? new Date() : null,
+  // create checkout session
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    line_items: [
+      {
+        price_data: {
+          currency: 'bdt',
+          // product_data: {
+          //   name: booking.service?.name || booking.service?.title || 'Service Booking',
+          //   description: `Booking for service ${booking.service?.name ?? booking.service?.title ?? ''}`,
+          // },
+          unit_amount: Math.round(Number(booking.price) * 100),
+        },
+        quantity: 1,
       },
-      include: { booking: true },
-    });
-
-    if (status === PaymentStatus.SUCCESS && payment.booking.status === BookingStatus.ACCEPTED) {
-      await tx.booking.update({
-        where: { id: payment.bookingId },
-        data: { status: BookingStatus.PAID },
-      });
-    }
-
-    return updatedPayment;
+    ],
+    mode: 'payment',
+    success_url: `${config.app_url}/payment/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${config.app_url}/payment/payment-cancelled`,
+    metadata: {
+      bookingId: booking.id,
+    },
   });
 
-  return transactionResult;
+ 
+  await prisma.payment.create({
+    data: {
+      bookingId: booking.id,
+      amount: booking.price as any,
+      provider: PaymentProvider.STRIPE,
+      paymentMethod: 'stripe',
+      status: PaymentStatus.PENDING,
+      customerId: booking.customerId,
+      stripeCheckoutSessionId: session.id,
+      currency: 'bdt',
+    },
+  });
+
+  return { checkoutUrl: session.url, sessionId: session.id };
 };
 
-const getUserPaymentHistoryFromDB = async (userId: string, query: IGetPaymentQuery) => {
+  
+const handleStripeWebhook = async (payload: Buffer, signature: string) => {
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+  const event = stripe.webhooks.constructEvent(payload, signature, endpointSecret);
+
+  console.log('Received Stripe event:', event.type);
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const sessionId = session.id;
+
+    const paymentRecord = await prisma.payment.findUnique({ where: { stripeCheckoutSessionId: sessionId } });
+    if (!paymentRecord) {
+      console.warn('Payment record not found for session', sessionId);
+      return;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.payment.update({
+        where: { id: paymentRecord.id },
+        data: {
+          status: PaymentStatus.SUCCESS,
+          paidAt: new Date(),
+          transactionId: session.payment_intent as string | null,
+          stripePaymentIntentId: session.payment_intent as string | null,
+        },
+      });
+
+      await tx.booking.update({
+        where: { id: paymentRecord.bookingId },
+        data: { status: BookingStatus.PAID },
+      });
+    });
+  }
+
+  if (event.type === 'checkout.session.expired' || event.type === 'checkout.session.async_payment_failed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const sessionId = session.id;
+    const paymentRecord = await prisma.payment.findUnique({ where: { stripeCheckoutSessionId: sessionId } });
+    if (!paymentRecord) return;
+    await prisma.payment.update({ where: { id: paymentRecord.id }, data: { status: PaymentStatus.FAILED } });
+  }
+};
+
+const getPaymentHistory = async (userId: string, role: string, query: IpaymentQuery) => {
   const limit = query.limit ? Number(query.limit) : 10;
   const page = query.page ? Number(query.page) : 1;
   const skip = (page - 1) * limit;
-  const sortBy = query.sortBy ? query.sortBy : "createdAt";
-  const sortOrder = query.sortOrder ? query.sortOrder : "desc";
+  const sortBy = query.sortBy ? query.sortBy : 'createdAt';
+  const sortOrder = query.sortOrder ? query.sortOrder : 'desc';
 
-  const andCondition: PaymentWhereInput[] = [];
-
-  if (query.searchTerm) {
-    andCondition.push({
-      OR: [
-        { paymentMethod: { contains: query.searchTerm, mode: "insensitive" } },
-        { transactionId: { contains: query.searchTerm, mode: "insensitive" } },
-      ],
-    });
-  }
-
-  if (query.provider) {
-    andCondition.push({ provider: query.provider });
-  }
-
-  if (query.status) {
-    andCondition.push({ status: query.status });
-  }
-
-  if (query.bookingId) {
-    andCondition.push({ bookingId: query.bookingId });
-  }
-
-  const whereCondition: PaymentWhereInput = andCondition.length > 0 ? { AND: andCondition } : {};
+  const where: any = {};
+  if (query.id) where.id = query.id as any;
+  if (query.status) where.status = query.status as any;
+  if (query.bookingId) where.bookingId = query.bookingId as any;
+  if (query.customerId) where.customerId = query.customerId as any;
+  if (role === Role.CUSTOMER) where.customerId = userId;
 
   const payments = await prisma.payment.findMany({
-    where: {
-      booking: {
-        customerId: userId,
-      },
-      ...whereCondition,
-    },
-    skip,
+    where,
     take: limit,
-    orderBy: {
-      [sortBy]: sortOrder,
-    },
-    include: {
-      booking: true,
+    skip,
+    orderBy: { [sortBy]: sortOrder as any },
+    select: {
+      id: true,
+      bookingId: true,
+      amount: true,
+      provider: true,
+      paymentMethod: true,
+      transactionId: true,
+      status: true,
+      paidAt: true,
+      createdAt: true,
+      currency: true,
+      customerId: true,
     },
   });
 
-  return payments;
-};
-
-const getPaymentByIdFromDB = async (userId: string, paymentId: string) => {
-  const payment = await prisma.payment.findUniqueOrThrow({
-    where: { id: paymentId },
-    include: { booking: true },
-  });
-
-  if (payment.booking.customerId !== userId) {
-    throw new Error("Forbidden! You can only view your own payment.");
-  }
-
-  return payment;
+  return {
+    data: payments,
+    meta: {
+      page,
+      limit,
+      total: payments.length,
+      totalPage: Math.ceil(payments.length / limit),
+    },
+  };
 };
 
 export const paymentService = {
-  createPaymentIntoDB,
-  confirmPaymentIntoDB,
-  getUserPaymentHistoryFromDB,
-  getPaymentByIdFromDB,
+  createCheckoutSession,
+  handleStripeWebhook,
+  getPaymentHistory,
 };

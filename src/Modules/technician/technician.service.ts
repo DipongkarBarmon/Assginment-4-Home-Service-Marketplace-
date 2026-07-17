@@ -93,6 +93,7 @@ const deleteTechnicianProfileFromDB = async (technicianId : string) => {
 
 const getOwnTechnicianProfileFromDB = async (userId : string) => {
 
+
     const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
         where : {
             userId : userId
@@ -149,7 +150,7 @@ const getAllTechnicianProfileFromDB = async (query : ITechnicianProfileQuery) =>
 
         if(query.isVerified) {
             andCondition.push({
-                isVerified : query.isVerified? true : false
+                isVerified : query.isVerified
             })
         }
         if(query.averageRating) {
@@ -222,6 +223,8 @@ const getAllTechnicianProfileFromDB = async (query : ITechnicianProfileQuery) =>
 
 }
 
+
+
 const createServiceIntoDB = async (userId : string, serviceData : ICreateService) => {
       const user = await prisma.user.findUniqueOrThrow({
         where : {
@@ -247,13 +250,15 @@ const createServiceIntoDB = async (userId : string, serviceData : ICreateService
       if (exists) {
         throw new Error("A service with this category already exists.");
       }
-      
-      const technicianProfile = user.technicianProfiles;
-    
 
+      console.log("Hello")
+      
+      const technicianProfileId = user.technicianProfiles.id;
+    
+     console.log("Technician Profile ID:", technicianProfileId); // Log the technician profile ID to verify it's being retrieved correctly
       const createdService = await prisma.service.create({
         data : {
-             technicianId : technicianProfile.id,
+             technicianId : technicianProfileId,
             ...serviceData
         },
         include : { 

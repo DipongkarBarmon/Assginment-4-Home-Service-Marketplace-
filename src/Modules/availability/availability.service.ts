@@ -79,10 +79,10 @@ const getAllAvailabilityFromDB = async (query : IAvailabilityQuery) => {
      const sortOrder = query.sortOrder? query.sortOrder : "desc";
      
      const andCondition : AvailabilityWhereInput[] = []
-     
+       
         if(query.isBooked) {
             andCondition.push({
-                isBooked : query.isBooked? true : false
+                isBooked : Boolean(query.isBooked)
             })
         } 
         if(query.technicianId) {

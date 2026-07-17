@@ -1,24 +1,15 @@
-import { PaymentStatus } from "../../../generated/prisma/enums.js";
-import { PaymentWhereInput } from "../../../generated/prisma/models.js";
+import { PaymentScalarWhereWithAggregatesInput } from "../../../generated/prisma/models.js";
 
-export interface ICreatePayment {
+
+export interface TCreatePayment {
   bookingId: string;
-  provider: "STRIPE" | "SSLCOMMERZ";
-  paymentMethod: string;
-  amount?: number;
 }
+ 
 
-export interface IConfirmPayment {
-  paymentId?: string;
-  bookingId?: string;
-  transactionId?: string;
-  status?: PaymentStatus;
-}
-
-export interface IGetPaymentQuery extends PaymentWhereInput {
-  searchTerm?: string;
+export interface IpaymentQuery extends PaymentScalarWhereWithAggregatesInput {
   page?: string;
   limit?: string;
-  sortOrder?: string;
   sortBy?: string;
+  searchTerm?: string;
+  sortOrder?: 'asc' | 'desc';
 }

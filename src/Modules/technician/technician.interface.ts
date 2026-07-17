@@ -56,6 +56,7 @@ export interface IUpdateService {
 
 
 export interface IGetAllBookingOfTechnician extends BookingWhereInput {
+    serchterm? : string,
     page ? : string,
     limit? : string,
     sortOrder? : string,

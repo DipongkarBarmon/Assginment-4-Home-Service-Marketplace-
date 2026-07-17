@@ -1,57 +1,78 @@
 import { NextFunction, Request, Response } from "express";
-import httpsStatus from "http-status";
+ 
+ 
+import httpStatus from "http-status";
 import { catchAsync } from "../../utility/catchAsync.js";
-import sendRespons from "../../utility/sendResponse.js";
+import sendResponse from "../../utility/sendResponse.js";
 import { paymentService } from "./payment.service.js";
 
-const createPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const payment = await paymentService.createPaymentIntoDB(req.user.id, req.body);
+const createCheckoutSession = catchAsync(async (req: Request, res: Response, next:NextFunction) => {
+   
+   const userId = req.user?.id;
 
-  sendRespons(res, {
-    success: true,
-    statusCode: httpsStatus.CREATED,
-    message: "Payment created successfully!",
-    data: payment,
-  });
+   const checkoutSession = await paymentService.createCheckoutSession( userId as string , req.body);
+
+   return sendResponse(res,{
+       success: true,
+       statusCode: httpStatus.OK,
+       message: "Checkout session created successfully",
+       data: checkoutSession
+   });
+    
+})
+
+
+const handleStripeWebhook = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const event  = req.body as Buffer;
+    const signature = req.headers['stripe-signature']!;
+
+    await paymentService.handleStripeWebhook(event, signature as string);
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Webhook handled successfully",
+        data: null
+    }); 
 });
 
-const confirmPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const payment = await paymentService.confirmPaymentIntoDB(req.user.id, req.body);
 
-  sendRespons(res, {
-    success: true,
-    statusCode: httpsStatus.OK,
-    message: "Payment confirmed successfully!",
-    data: payment,
-  });
+const getPaymentHistory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?.id;
+    const role = req.user?.role;
+    const queryParams = req.query;
+    const paymentHistory = await paymentService.getPaymentHistory(userId as string,role as string,queryParams);
+
+    return sendResponse(res, {
+        success: true,
+        statusCode  : httpStatus.OK,
+        message: "Payment history fetched successfully",
+        data: paymentHistory.data,
+        meta: paymentHistory.meta
+    });
 });
 
-const getUserPayments = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const payments = await paymentService.getUserPaymentHistoryFromDB(req.user.id, req.query);
+const paymentSuccess = catchAsync(async (req: Request, res: Response, next: NextFunction) => { 
 
-  sendRespons(res, {
-    success: true,
-    statusCode: httpsStatus.OK,
-    message: "Payment history retrieved successfully!",
-    data: payments,
-  });
-});
+     return sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Payment success page",
+        data: null
+    });
+})
 
-const getPaymentById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const paymentId = req.params.paymentId as string;
-  const payment = await paymentService.getPaymentByIdFromDB(req.user.id, paymentId);
-
-  sendRespons(res, {
-    success: true,
-    statusCode: httpsStatus.OK,
-    message: "Payment retrieved successfully!",
-    data: payment,
-  });
-});
-
+const paymentCancelled = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    return sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Payment cancelled page",
+        data: null
+    });
+})
 export const paymentController = {
-  createPayment,
-  confirmPayment,
-  getUserPayments,
-  getPaymentById,
-};
+    createCheckoutSession,
+    handleStripeWebhook,
+    getPaymentHistory,
+    paymentSuccess,
+    paymentCancelled
+}

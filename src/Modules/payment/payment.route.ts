@@ -1,13 +1,15 @@
 import { Router } from "express";
-import { auth } from "../../Middleware/auth.js";
 import { Role } from "../../../generated/prisma/enums.js";
+import { auth } from "../../Middleware/auth.js";
 import { paymentController } from "./payment.controller.js";
+ 
 
 const router = Router();
 
-router.post("/create", auth(Role.CUSTOMER), paymentController.createPayment);
-router.post("/confirm", auth(Role.CUSTOMER), paymentController.confirmPayment);
-router.get("/", auth(Role.CUSTOMER), paymentController.getUserPayments);
-router.get("/:paymentId", auth(Role.CUSTOMER), paymentController.getPaymentById);
+router.post('/checkout',auth(Role.CUSTOMER,Role.ADMIN), paymentController.createCheckoutSession);
+router.post('/webhook', paymentController.handleStripeWebhook);
+router.get('/payment-history', auth(Role.CUSTOMER,Role.ADMIN), paymentController.getPaymentHistory);
+router.get('/payment-success', paymentController.paymentSuccess);
+router.get('/payment-cancelled', paymentController.paymentCancelled);
 
 export const paymentRouter = router;
