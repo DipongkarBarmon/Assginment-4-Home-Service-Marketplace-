@@ -40,7 +40,35 @@ const createReview = async (userId:string ,payload : TCreateReview) =>{
             rating,
             comment,
            },
+           include : {
+            technician : {
+                include : {
+                    user : {
+                        omit : {
+                            password : true
+                        }
+                    },
+                    services : {
+                       include : {
+                          category : true
+                       },
+                    }
+                  }
+              },
+              customer : {
+                omit : {
+                    password : true
+                }
+              },
+              service : {
+                include : {
+                    category : true
+                 },
+              }
+           }
         });
+ 
+    
 
         const technicianStats = await tx.review.aggregate({
             where :{
@@ -181,6 +209,23 @@ const updateReview = async (
         id: review.id,
       },
       data: payload,
+      include: {
+        technician: {
+          include: {
+            user: {
+              omit: {
+                password: true,
+              },
+            },
+          },
+        },
+        customer: {
+          omit: {
+            password: true,
+          },
+        },
+        service: true,
+      },  
     });
 
     const technicianStats = await tx.review.aggregate({

@@ -426,12 +426,23 @@ const getAllBookingOfTechnicianFromDB = async (technicianId : string, query :IGe
                     availabilities : true,
                     reviews : true
                 }
-            }
+            },
+            customer : {
+                omit : {
+                    password : true
+                }
+            },
+            service : {
+                include : {
+                    category : true
+                }
+            },
+            availability : true
          }
      })
      return bookings;   
-    
 }
+ 
 
 
 const acceptBookingIntoDB = async (bookingId : string) => {
@@ -471,7 +482,18 @@ const acceptBookingIntoDB = async (bookingId : string) => {
  
                  },
                
-                }
+                },
+                customer : { 
+                    omit : {
+                        password : true
+                    }
+                },
+                service : {
+                    include : {
+                        category : true
+                    }
+                },
+                availability : true 
              }  
         })
 
@@ -534,6 +556,17 @@ const declineBookingIntoDB = async (bookingId: string) => {
             reviews: true,
           },
         },
+        customer: {
+          omit: {
+            password: true,
+          },
+        },
+        service: {
+          include: {
+            category: true,
+          },
+        },
+        availability: true,
       },
     });
 
@@ -542,7 +575,7 @@ const declineBookingIntoDB = async (bookingId: string) => {
 
   return transactionResult;
 };
-
+   
 const startWorkingOnBookingIntoDB = async (bookingId: string) => {
     const transactionResult = await prisma.$transaction(async (prisma) => {
         const booking = await prisma.booking.findUniqueOrThrow({
@@ -580,7 +613,18 @@ const startWorkingOnBookingIntoDB = async (bookingId: string) => {
  
                  },
                
-                }
+                },
+                customer : {
+                    omit : {
+                        password : true
+                    }
+                },
+                service : {
+                    include : {
+                        category : true
+                    }
+                },
+                availability : true 
              }  
         })
 
@@ -642,7 +686,18 @@ const completeBookingIntoDB = async (bookingId: string) => {
  
                  },
                
-                }
+                },
+                customer : {
+                    omit : {
+                        password : true
+                    }
+                },
+                service : {
+                    include : {
+                        category : true
+                    }
+                },
+                availability : true     
              }  
         })
 

@@ -64,6 +64,11 @@ const createBookingIntoDB = async (userId: string, serviceId: string, availabili
 
             },
           
+           },
+           customer : {
+            omit : {
+                password : true
+            }
            }
         }
      })
@@ -98,6 +103,11 @@ const getBookingByIdFromDB = async (bookingId : string) => {
 
             },
           
+           },
+           customer : {
+            omit : {
+                password : true
+            }
            }
         }
      })
@@ -181,6 +191,11 @@ const getUserBookingFromDB = async (userId : string, query: IGETBooking) => {
 
             },
           
+           },
+           customer : {
+            omit : {
+                password : true
+            }
            }
         }
      })
@@ -243,6 +258,11 @@ const cancelBookingIntoDB = async (bookingId: string) => {
  
                  },
                
+                },
+                customer : {
+                    omit : {
+                        password : true
+                    }
                 }
              }  
         })
