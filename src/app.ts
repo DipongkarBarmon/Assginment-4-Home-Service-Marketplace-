@@ -12,7 +12,12 @@ import { categoryRouter } from './Modules/categroy/category.route.js'
 import { availabilityRouter } from './Modules/availability/availablility.route.js'
 import { bookingRouter } from './Modules/bookings/booking.route.js'
 import { adminRouter } from './Modules/admin/admin.route.js'
+ 
+import { reviewRouter } from './Modules/review/review.route.js'
+import { paymentRouter } from './Modules/payment/payment.route.js'
 const app = express()
+
+app.use('/api/payment/webhook',express.raw({type : 'application/json'}))
 
 app.use(express.json())
 app.use(express.urlencoded({extended : true}))
@@ -35,6 +40,8 @@ app.use('/api/category',categoryRouter)
 app.use('/api/service',serviceRouter)
 app.use('/api/availability',availabilityRouter)
 app.use('/api/booking',bookingRouter)
+app.use('/api/payment',paymentRouter)
+app.use('/api/reviews',reviewRouter)
 
 
 

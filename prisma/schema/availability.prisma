@@ -1,21 +1,15 @@
 model Availability {
-  id String @id @default(uuid())
-
+  id           String            @id @default(uuid())
   technicianId String
+  date         DateTime
+  startTime    DateTime
+  endTime      DateTime
+  isBooked     Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
   technician   TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
-
-  date DateTime // e.g. 2026-07-15
-
-  startTime DateTime // e.g. 2026-07-15 09:00
-  endTime   DateTime // e.g. 2026-07-15 12:00
-
-  isBooked Boolean @default(false)
-  bookings Booking?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  bookings     Booking[]
 
   @@index([technicianId, date])
   @@map("availabilities")
-  
 }

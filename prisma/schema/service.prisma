@@ -1,22 +1,21 @@
 model Service {
-  id String @id @default(uuid())
-
+  id              String            @id @default(uuid())
   title           String
   description     String?
   price           Decimal           @db.Decimal(10, 2)
-  duration        Int? // Duration in minutes
-  certificates    String[] // Array of certificate URLs or names
+  duration        Int?
   categoryId      String
-  category        Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  experienceYears Int               @default(0)
   technicianId    String
+  isActive        Boolean           @default(true)
+  averageRating  Decimal        @default(0) @db.Decimal(2, 1)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  certificates    String[]
+  experienceYears Int               @default(0)
+  bookings        Booking[]
+  category        Category          @relation(fields: [categoryId], references: [id])
   technician      TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
-
-  isActive Boolean @default(true)
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  bookings  Booking[]
-
+  reviews Review[]
   @@map("services")
+  
 }

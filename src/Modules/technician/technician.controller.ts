@@ -43,7 +43,7 @@ const updateTechnicianProfile = catchAsync(async(req : Request, res : Response, 
      const technicianId = req.params.technicianId;
      const technicianData = req.body;
 
-    if(req.user.role !== "TECHNITIAN") {
+    if(req.user.role !== "TECHNICIAN") {
         throw new Error("Forbidden! Only technicians can update their profile!")
     }
       
@@ -68,8 +68,10 @@ const deleteTechnicianProfile = catchAsync(async(req : Request, res : Response, 
 })  
 
 const getOwnTechnicianProfile = catchAsync(async(req : Request, res : Response, next : NextFunction) => { 
-        const userId = req.user.userId;
-        const technicianProfile = await technicianService.getOwnTechnicianProfileFromDB(userId);
+     // console.log("hdsjdhsjd")
+        console.log("User ID:", req.user.id); // Log the user ID to verify it's being passed correctly   
+        
+        const technicianProfile = await technicianService.getOwnTechnicianProfileFromDB(req.user.id);
         sendRespons(res, {
             success : true,
             statusCode :httpsStatus.OK,
@@ -81,6 +83,7 @@ const getOwnTechnicianProfile = catchAsync(async(req : Request, res : Response, 
 
 
 const createService = catchAsync(async (req: Request, res: Response, next: NextFunction) => { 
+
       const result = await technicianService.createServiceIntoDB(req.user.id, req.body);
 
       sendRespons(res, {

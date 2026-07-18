@@ -6,3 +6,4 @@ generated
 .git
 
 /generated/prisma
+.vercel

@@ -1,22 +1,20 @@
 model Review {
-  id String @id @default(uuid())
-
-  customerId String
-  customer   User   @relation("CustomerReviews", fields: [customerId], references: [id], onDelete: Cascade)
-
+  id           String            @id @default(uuid())
+  customerId   String
   technicianId String
+  serviceId    String
+  bookingId    String            @unique
+  rating       Int
+  comment      String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  booking      Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  customer     User              @relation("CustomerReviews", fields: [customerId], references: [id], onDelete: Cascade)
   technician   TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
-
-  bookingId String  @unique
-  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-
-  rating  Int
-  comment String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  service      Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   @@index([technicianId])
   @@index([customerId])
+  @@index([serviceId])
   @@map("reviews")
 }

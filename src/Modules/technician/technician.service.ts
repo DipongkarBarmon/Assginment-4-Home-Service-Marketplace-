@@ -93,6 +93,7 @@ const deleteTechnicianProfileFromDB = async (technicianId : string) => {
 
 const getOwnTechnicianProfileFromDB = async (userId : string) => {
 
+
     const technicianProfile = await prisma.technicianProfile.findUniqueOrThrow({
         where : {
             userId : userId
@@ -149,7 +150,7 @@ const getAllTechnicianProfileFromDB = async (query : ITechnicianProfileQuery) =>
 
         if(query.isVerified) {
             andCondition.push({
-                isVerified : query.isVerified? true : false
+                isVerified : Boolean(query.isVerified)
             })
         }
         if(query.averageRating) {
@@ -222,6 +223,8 @@ const getAllTechnicianProfileFromDB = async (query : ITechnicianProfileQuery) =>
 
 }
 
+
+
 const createServiceIntoDB = async (userId : string, serviceData : ICreateService) => {
       const user = await prisma.user.findUniqueOrThrow({
         where : {
@@ -239,21 +242,36 @@ const createServiceIntoDB = async (userId : string, serviceData : ICreateService
       if(!user.technicianProfiles) {
         throw new Error("Technician profile does not exist for this user!")     
       }
+     
+      await prisma.category.findUniqueOrThrow({
+        where: {
+        id:serviceData.categoryId,
+        },
+      });
 
-     const exists = user.technicianProfiles.services.some(
-        (service) => service.categoryId === serviceData.categoryId
-      );
+        const existingService = await prisma.service.findFirst({
+            where: {
+                technicianId: user.technicianProfiles.id,
+                categoryId: serviceData.categoryId,
+                title: {
+                    equals: serviceData.title,
+                    mode: "insensitive"
+                }
+            }
+        });
 
-      if (exists) {
-        throw new Error("A service with this category already exists.");
-      }
+        if (existingService) {
+           throw new Error("This service already exists in this category.");
+        }
+
+    //   console.log("Hello")
       
-      const technicianProfile = user.technicianProfiles;
+      const technicianProfileId = user.technicianProfiles.id;
     
-
+    //  console.log("Technician Profile ID:", technicianProfileId); // Log the technician profile ID to verify it's being retrieved correctly
       const createdService = await prisma.service.create({
         data : {
-             technicianId : technicianProfile.id,
+             technicianId : technicianProfileId,
             ...serviceData
         },
         include : { 
@@ -487,7 +505,7 @@ const declineBookingIntoDB = async (bookingId: string) => {
     
     await tx.availability.update({
       where: {
-        id: booking.availabilityId,
+        id: booking.availabilityId!,
       },
       data: {
         isBooked: false,
@@ -533,8 +551,8 @@ const startWorkingOnBookingIntoDB = async (bookingId: string) => {
             }
         })
 
-        if(booking.status !== BookingStatus.ACCEPTED){
-            throw new Error("Booking is not in accepted status!")
+        if(booking.status !== BookingStatus.PAID){
+            throw new Error("Booking is not in paid status!")
         }
 
         const updatedBooking = await prisma.booking.update({

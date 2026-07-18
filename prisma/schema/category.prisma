@@ -3,10 +3,9 @@ model Category {
   name        String    @unique
   icon        String?
   description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   services    Service[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 
   @@map("categories")
 }

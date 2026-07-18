@@ -1,25 +1,19 @@
 model Booking {
-  id String @id @default(uuid())
-
-  customerId String
-  customer   User   @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
-
-  technicianId String
-  technician   TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
-
-  serviceId String
-  service   Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
-  availabilityId String @unique
-  availability   Availability @relation(fields: [availabilityId], references: [id], onDelete  : Restrict) 
-
-  price Decimal @db.Decimal(10, 2)
-
-  status BookingStatus @default(REQUESTED)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  payments  Payment?
-  reviews   Review?
+  id             String            @id @default(uuid())
+  customerId     String
+  technicianId   String
+  serviceId      String
+  price          Decimal           @db.Decimal(10, 2)
+  status         BookingStatus     @default(REQUESTED)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  availabilityId String?           
+  availability   Availability?      @relation(fields: [availabilityId], references: [id])
+  customer       User              @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
+  service        Service           @relation(fields: [serviceId], references: [id])
+  technician     TechnicianProfile @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  payments       Payment?
+  reviews        Review?
 
   @@index([customerId])
   @@index([technicianId])
