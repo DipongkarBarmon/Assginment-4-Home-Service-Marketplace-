@@ -43,7 +43,7 @@ All endpoints are described relative to the base path `/api/v1`.
 
 Authentication: many endpoints require role-based auth via `auth` middleware. Roles: `ADMIN`, `TECHNICIAN`, `CUSTOMER`.
 
-### Auth — `/api/v1/auth`
+### Auth — `/api/auth`
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
 | POST | /register | public | Register a new user |
@@ -53,7 +53,7 @@ Authentication: many endpoints require role-based auth via `auth` middleware. Ro
 | PUT | /update-profile | any role | Update current user profile |
 | DELETE | /delete-profile | any role | Delete current user profile |
 
-### Bookings — `/api/v1/bookings`
+### Bookings — `/api/bookings`
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
 | POST | /create-booking | CUSTOMER | Create booking |
@@ -61,7 +61,7 @@ Authentication: many endpoints require role-based auth via `auth` middleware. Ro
 | GET | /get-user-booking | CUSTOMER | List user bookings |
 | POST | /cancel-booking/:bookingId | CUSTOMER | Cancel booking |
 
-### Admin — `/api/v1/admin`
+### Admin — `/api/vadmin`
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
 | GET | /get-all-users | ADMIN | List users |
@@ -72,7 +72,7 @@ Authentication: many endpoints require role-based auth via `auth` middleware. Ro
 | PUT | /update-category/:categoryId | ADMIN | Update category |
 | DELETE | /delete-category/:categoryId | ADMIN | Delete category |
 
-### Category — `/api/v1/category`
+### Category — `/api/category`
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
 | GET | /get-all-category | public | List categories |
@@ -84,7 +84,7 @@ Authentication: many endpoints require role-based auth via `auth` middleware. Ro
 | GET | /get-all-service | public | List services |
 | GET | /get-service/:serviceId | public | Get service details |
 
-### Technician — `/api/v1/technician`
+### Technician — `/api/technician`
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
 | POST | /create-technician-profile | TECHNICIAN | Create technician profile |
@@ -101,21 +101,21 @@ Authentication: many endpoints require role-based auth via `auth` middleware. Ro
 | POST | /start-working-on-booking/:bookingId | TECHNICIAN | Start work (mark in-progress) |
 | POST | /complete-booking/:bookingId | TECHNICIAN | Complete booking |
 
-### Availability — `/api/v1/availability`
+### Availability — `/api/availability`
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
 | POST | /create-availability | TECHNICIAN | Create availability slot |
 | GET | /get-all-availability | public | List availability |
 | DELETE | /delete-availability/:availabilityId | TECHNICIAN | Delete availability |
 
-### Payment — `/api/v1/payment`
+### Payment — `/api/payment`
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
 | POST | /checkout | CUSTOMER, ADMIN | Create Stripe checkout session |
 | POST | /webhook | public (raw body) | Stripe webhook receiver (verify signature) |
 | GET | /payment-history | CUSTOMER, ADMIN | List payments |
 
-### Review — `/api/v1/review`
+### Review — `/api/review`
 | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- |
 | POST | / | CUSTOMER | Create a review |
@@ -189,7 +189,7 @@ Project includes `vercel.json` and is ready to deploy on Vercel. Set env vars in
 ## Smoke Test
 ```
 curl http://localhost:8000/
-curl http://localhost:8000/api/v1/service/get-all-service
+curl http://localhost:8000/api/service/get-all-service
 ```
 
 ## Contributing
