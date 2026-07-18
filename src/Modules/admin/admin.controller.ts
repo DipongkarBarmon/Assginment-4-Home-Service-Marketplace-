@@ -7,7 +7,7 @@ import { User, userStatus } from "../../../generated/prisma/browser.js";
 
 const getAllUsers = catchAsync(async (req: Request, res: Response,next: NextFunction) => { 
      const query = req.query
-     console.log(query) 
+    //  console.log(query) 
      const  users = await adminService.getAllUsersFromDB(query);
      sendRespons(res, {
         success : true,

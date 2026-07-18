@@ -69,8 +69,7 @@ const deleteTechnicianProfile = catchAsync(async(req : Request, res : Response, 
 
 const getOwnTechnicianProfile = catchAsync(async(req : Request, res : Response, next : NextFunction) => { 
      // console.log("hdsjdhsjd")
-        console.log("User ID:", req.user.id); // Log the user ID to verify it's being passed correctly   
-        
+         
         const technicianProfile = await technicianService.getOwnTechnicianProfileFromDB(req.user.id);
         sendRespons(res, {
             success : true,

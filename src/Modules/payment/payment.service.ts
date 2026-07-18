@@ -130,9 +130,9 @@ const handleStripeWebhook = async (payload: Buffer, signature: string) => {
      signature, 
      endpointSecret
     );
-    console.log("Hello from stripe webhook handler");
+    // console.log("Hello from stripe webhook handler");
 
-  console.log('Received Stripe event:', event.type);
+  // console.log('Received Stripe event:', event.type);
 
      switch (event.type) {
         case 'checkout.session.completed':

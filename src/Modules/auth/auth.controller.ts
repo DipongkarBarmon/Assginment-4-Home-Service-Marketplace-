@@ -49,7 +49,7 @@ const userLogin = catchAsync(async(req : Request, res : Response, next : NextFun
 
 const refreshToken = catchAsync(async( req : Request,res: Response,next : NextFunction) => {
       const token = req.cookies.refreshToken;
-      console.log(token)
+      // console.log(token)
       const accessToken = await authService.refreshTokenFromDB(token)
       
       res.cookie("accessToken",accessToken, {
@@ -71,7 +71,7 @@ const refreshToken = catchAsync(async( req : Request,res: Response,next : NextFu
 
 const getUserProfile = catchAsync(async(req : Request, res : Response, next : NextFunction) => {
     
-    console.log("hello")
+   //  console.log("hello")
     const userProfile = await authService.getUserProfileFromDB(req.user.id)
     
 

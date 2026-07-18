@@ -22,7 +22,7 @@ const getAllCategory = catchAsync(async( req : Request, res : Response, next : N
 const getCategoryById = catchAsync(async( req : Request, res : Response, next : NextFunction) => { 
       const {categoryId} = req.params 
      const result = await categoryService.getCategoryByIdfromDB(categoryId as string) 
-     console.log(result)
+//      console.log(result)
      sendRespons(res, {
         success : true,
         statusCode : httpsStatus.OK,
